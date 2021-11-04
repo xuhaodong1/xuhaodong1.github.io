@@ -76,9 +76,9 @@ menu_settings:
 
 favicon:
   small: /images/Common/favicon-16x16.png
-  medium: /images/icons/favicon-32x32.png
-  apple_touch_icon: /images/icons/apple-touch-icon.png
-  safari_pinned_tab: /images/icons/safari-pinned-tab.svg
+  medium: /images/Common/favicon-32x32.png
+  apple_touch_icon: /images/Common/apple-touch-icon.png
+  safari_pinned_tab: /images/Common/safari-pinned-tab.svg
   # ! --------------------------------------------------
   # ! If you don't know the following, please ignore it.
   # ! --------------------------------------------------
@@ -109,11 +109,11 @@ night_mode:
 # The layout for sidebar and content of site.
 layout:
   # The width of the content area in website.
-  content: 768px
+  content: 900px
   # The width of the sidebar in website.
   sidebar: 300px
   # The width between the content and the sidebar.
-  content_sidebar_gap: 30px
+  content_sidebar_gap: 90px
   # The padding property of the main tag.
   # e.g. Usage:
   # 20px
@@ -133,7 +133,7 @@ header:
   enable: true
   show_on:
     # Whether to show on the article page.
-    post: true
+    post: false
   # If you set a percentage, it will be calculated based on the height of screen (Supports all CSS units)
   height: 80%
   # Background image of site header.
@@ -201,9 +201,9 @@ footer:
   copyright:
     enable: true
     # If not set, will be used `author` from Hexo main config (e.g. liuyib All Rights Reserved)
-    text:
+    text: nihao201
     # Start time. If not set, the current year will be used.
-    since:
+    since: 2021
     # End time. If not set, the current year will be used.
     end:
   # The icon between the copyright and the owner.
@@ -250,7 +250,7 @@ creative_commons:
   #   it | lv | lt | hu | nl | no | pt | pt_BR | pl | ro | sl | fi | sv
   #   tr | is | cs | el | be | ru | zh | zh_TW | uk | ar | fa | bn | ja | ko
   # If not set, `en` will be used by default.
-  language:
+  language: zh
 
 # Back to top
 back2top:
@@ -277,7 +277,7 @@ sidebar:
   # The distance from the top of the page when the sidebar is fixed (Only `px` unit is supported)
   offsetTop: 20px
   # Whether to show horizon line.
-  horizon_line: true
+  horizon_line: false
 
 author:
   enable: true
@@ -331,7 +331,7 @@ toc:
   expand_all: false
   # Minimum heading depth of generated toc.
   # You can also set it in Front-matter by `toc_max_depth`.
-  min_depth: 1
+  min_depth: 2
   # You can also set it in Front-matter by `toc_min_depth`.
   # Maximum heading depth of generated toc.
   max_depth: 6
@@ -351,7 +351,7 @@ reading_progress:
   enable: true
   # (Please use "" to wrap the value)
   color: "#fc6423"
-  height: 1px
+  height: 2px
 
 # ---------------------------------------------------------------
 # Page config
@@ -405,7 +405,7 @@ post_meta:
     # Set reading speed to count reading time.
     speed:
       # Reading speed of zh-CN.
-      zh: 200
+      zh: 100
       # Reading speed of en-US.
       en: 80
   # Counting the words of post.
@@ -560,11 +560,11 @@ disqus:
 # Utterances
 # See: https://utteranc.es/
 utterances:
-  enable: false
+  enable: true
   # Github username.
-  owner:
+  owner: xuhaodong1
   # Github repository.
-  repo:
+  repo: xuhaodong1.github.io
   # Choose the mapping between blog posts and GitHub issues.
   # Optional values: pathname | url | title | og:title
   mapping: title
