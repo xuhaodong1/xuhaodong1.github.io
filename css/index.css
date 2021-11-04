@@ -664,7 +664,7 @@ kbd {
   font-size: 16px;
 }
 .content-wrap {
-  width: calc(100% - 330px);
+  width: calc(100% - 390px);
   float: right;
 }
 .content-wrap--noside {
@@ -1029,9 +1029,6 @@ kbd {
   margin: 0;
   padding-left: 1em;
 }
-.sidebar-ov > div + div {
-  border-top: 1px dashed var(--color-gray-300);
-}
 .sidebar-ov-author {
   width: 100%;
   text-align: center;
@@ -1136,7 +1133,7 @@ kbd {
 }
 .sidebar-reading-line {
   width: 100%;
-  height: 1px;
+  height: 2px;
   background-color: #fc6423;
   -webkit-transition: -webkit-transform 0.2s ease;
   -moz-transition: -moz-transform 0.2s ease;
@@ -2425,12 +2422,12 @@ a.fancybox {
   font-size: 0.9em;
   color: #999;
 }
-@media (min-width: 1138px) {
+@media (min-width: 1330px) {
   .header-nav-inner {
-    width: 1138px;
+    width: 1330px;
   }
   .main-inner {
-    width: 1138px;
+    width: 1330px;
   }
 }
 @media (min-width: 991.98px) {
