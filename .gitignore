@@ -20,11 +20,5 @@ codekit-config.json
 
 # macOS
 .DS_Store
-
-# Jekyll generated files
-.jekyll-cache
-.jekyll-metadata
-.sass-cache
 public
-_asset_bundler_cache
-_site
+db.json
