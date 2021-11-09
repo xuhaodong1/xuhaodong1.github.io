@@ -295,7 +295,7 @@ author:
     # Optional values: turn | shake
 #    animation: turn
   # Your favorite motto.
-  motto: 随性而较真.
+  motto: 不以功利为目的.
 
 # Social links
 # Value before `||` is the target link, value after `||` is the name of FontAwesome icon.
