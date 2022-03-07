@@ -199,7 +199,7 @@ Organizer - Launch Time / 线上数据
 
 [老司机技术周报 - 优化 APP 启动](https://xiaozhuanlan.com/topic/4690823715)
 
-WWDC19 / 423 - 优化 APP 启动](https://developer.apple.com/videos/play/wwdc2019/423/)
+[WWDC19 / 423 - 优化 APP 启动](https://developer.apple.com/videos/play/wwdc2019/423/)
 
 [WWDC17 / 413 - App 启动时间: 过去、现在和将来](https://developer.apple.com/videos/play/wwdc2017/413)
 
