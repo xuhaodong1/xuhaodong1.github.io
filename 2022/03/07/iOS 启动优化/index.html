@@ -1,0 +1,331 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/Common/favicon-16x16.png?v=2.6.2" type="image/png" sizes="16x16"><link rel="icon" href="/images/Common/favicon-32x32.png?v=2.6.2" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="/images/Common/apple-touch-icon.png?v=2.6.2" sizes="180x180"><link rel="mask-icon" href="/images/Common/safari-pinned-tab.svg?v=2.6.2" color="#54bcff"><meta name="description" content="iOS 启动优化                           前言       启动时间往往是一个用户对 APP 的第一影响，如何优化启动时间一直都是个老生常谈的问题。本文结合了 WWDC16、WWDC17与WWDC19的相关 Session 与借鉴老司机的博客，梳理了启动阶段、dyld变化、Mach-O、虚拟内存等内容，简要阐述了如何优化与检测启动时间。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 启动优化">
+<meta property="og:url" content="https://xuhaodong1.github.io/2022/03/07/iOS%20%E5%90%AF%E5%8A%A8%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="nihao&#39; Blog">
+<meta property="og:description" content="iOS 启动优化                           前言       启动时间往往是一个用户对 APP 的第一影响，如何优化启动时间一直都是个老生常谈的问题。本文结合了 WWDC16、WWDC17与WWDC19的相关 Session 与借鉴老司机的博客，梳理了启动阶段、dyld变化、Mach-O、虚拟内存等内容，简要阐述了如何优化与检测启动时间。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-07T22:54:49.000Z">
+<meta property="article:modified_time" content="2022-03-07T03:29:25.986Z">
+<meta property="article:author" content="nihao">
+<meta property="article:tag" content="App启动">
+<meta name="twitter:card" content="summary"><title>iOS 启动优化 | nihao' Blog</title><link ref="canonical" href="https://xuhaodong1.github.io/2022/03/07/iOS%20%E5%90%AF%E5%8A%A8%E4%BC%98%E5%8C%96/"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css" type="text/css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" type="text/css"><link rel="stylesheet" href="/css/index.css?v=2.6.2"><script>var Stun = window.Stun || {};
+var CONFIG = {
+  root: '/',
+  algolia: undefined,
+  assistSearch: undefined,
+  fontIcon: {"prompt":{"success":"fas fa-check-circle","info":"fas fa-arrow-circle-right","warning":"fas fa-exclamation-circle","error":"fas fa-times-circle"},"copyBtn":"fas fa-copy"},
+  sidebar: {"offsetTop":"20px","tocMaxDepth":6},
+  header: {"enable":true,"showOnPost":false,"scrollDownIcon":false},
+  postWidget: {"endText":true},
+  nightMode: {"enable":true},
+  back2top: {"enable":true},
+  codeblock: {"style":"carbon","highlight":"light","wordWrap":true},
+  reward: false,
+  fancybox: true,
+  zoomImage: {"gapAside":"20px"},
+  galleryWaterfall: undefined,
+  lazyload: false,
+  pjax: undefined,
+  externalLink: {"icon":{"enable":true,"name":"fas fa-external-link-alt"}},
+  shortcuts: {"switchPost":true},
+  prompt: {"copyButton":"复制","copySuccess":"复制成功","copyError":"复制失败"},
+  sourcePath: {"js":"js","css":"css","images":"images"},
+};
+
+window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.1"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner header-inner--height header-inner--bgcolor"><nav class="header-nav header-nav--sticky"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">首页</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">归档</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/categories/"><span class="header-nav-menu-item__icon"><i class="fas fa-layer-group"></i></span><span class="header-nav-menu-item__text">分类</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/tags/"><span class="header-nav-menu-item__icon"><i class="fas fa-tags"></i></span><span class="header-nav-menu-item__text">标签</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content" id="content"><!-- Just used to judge whether it is an article page--><div id="is-post"></div><div class="post"><header class="post-header"><h1 class="post-title">iOS 启动优化</h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">发表于</span><span class="post-meta-item__value">2022-03-07</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">更新于</span><span class="post-meta-item__value">2022-03-07</span></span></div></header><div class="post-body">
+        <h1 id="iOS-启动优化"   >
+          <a href="#iOS-启动优化" class="heading-link"><i class="fas fa-link"></i></a><a href="#iOS-启动优化" class="headerlink" title="iOS 启动优化"></a>iOS 启动优化</h1>
+      
+        <h2 id="前言"   >
+          <a href="#前言" class="heading-link"><i class="fas fa-link"></i></a><a href="#前言" class="headerlink" title="前言"></a>前言</h2>
+      <p>启动时间往往是一个用户对 APP 的第一影响，如何优化启动时间一直都是个老生常谈的问题。本文结合了 WWDC16、WWDC17与WWDC19的相关 Session 与借鉴老司机的博客，梳理了启动阶段、dyld变化、Mach-O、虚拟内存等内容，简要阐述了如何优化与检测启动时间。</p>
+<span id="more"></span>
+
+
+        <h2 id="启动流程"   >
+          <a href="#启动流程" class="heading-link"><i class="fas fa-link"></i></a><a href="#启动流程" class="headerlink" title="启动流程"></a>启动流程</h2>
+      
+        <h3 id="启动类型"   >
+          <a href="#启动类型" class="heading-link"><i class="fas fa-link"></i></a><a href="#启动类型" class="headerlink" title="启动类型"></a>启动类型</h3>
+      <ul>
+<li><p>冷启动</p>
+<ul>
+<li>重启后 / APP 很长时间为启动过</li>
+<li>将它从磁盘加载到内存</li>
+<li>启动支撑 APP 运行的系统侧服务(system-side service)</li>
+<li>创建 APP 进程</li>
+</ul>
+</li>
+<li><p>热启动</p>
+<ul>
+<li>APP 最近启动过</li>
+<li>由于有APP部分与系统侧服务在内存中，所以会比冷启动快一些。</li>
+</ul>
+</li>
+</ul>
+
+        <h3 id="启动阶段"   >
+          <a href="#启动阶段" class="heading-link"><i class="fas fa-link"></i></a><a href="#启动阶段" class="headerlink" title="启动阶段"></a>启动阶段</h3>
+      <ul>
+<li><p>main 函数之前</p>
+<ul>
+<li><p>加载可执行文件</p>
+</li>
+<li><p>dyld 加载 dylibs，进行 rebase 指针调整 与 bind 符号绑定。</p>
+<ul>
+<li>rebase: 修正指向当前 Mach-O 文件的指针。所需要的指针信息已经被编码到 __LINKEDIT 里，然后就是不断重复的对 __DATA 的指针加上这个偏移量。</li>
+<li>bind: 对调用外部符号进行绑定处理。</li>
+</ul>
+</li>
+<li><p>Runtime 初始化</p>
+</li>
+</ul>
+</li>
+<li><p>main 函数之后</p>
+<ul>
+<li><p>实例化 UIApplication 与 UIApplicationDelegate </p>
+</li>
+<li><p>开始事件处理与系统集成</p>
+</li>
+<li><p>调用 UIApplicationDelegate 中生命周期方法</p>
+<ul>
+<li>普通：<br>application:willFinishLaunchingWithOptions:<br>application:didFinishLaunchingWithOptions:<br>applicationDidBecomeActive:</li>
+<li>针对 UISceneDelegate：<br>application:willFinishLaunchingWithOptions:<br>application:didFinishLaunchingWithOptions:<br>scene:willConnectToSession:options:<br>sceneWillEnterForeground:<br>sceneDidBecomeActive:</li>
+</ul>
+</li>
+<li><p>首屏渲染</p>
+<ul>
+<li>loadView</li>
+<li>viewDidLoad</li>
+<li>layoutSubViews</li>
+</ul>
+</li>
+<li><p>异步获取数据并呈现给用户</p>
+</li>
+</ul>
+</li>
+</ul>
+
+        <h2 id="dyld"   >
+          <a href="#dyld" class="heading-link"><i class="fas fa-link"></i></a><a href="#dyld" class="headerlink" title="dyld"></a>dyld</h2>
+      
+        <h3 id="dyld-1-x"   >
+          <a href="#dyld-1-x" class="heading-link"><i class="fas fa-link"></i></a><a href="#dyld-1-x" class="headerlink" title="dyld 1.x"></a>dyld 1.x</h3>
+      <ul>
+<li>1996 - 2004</li>
+<li>包含在 NeXTStep 3.0 中，不能很好支持相同语义同时一些边界条件无法正常运作。</li>
+<li>预绑定(PreBuilding)：为 dylib 和 App 找到合适的固定地址，每次启动都会有。</li>
+</ul>
+
+        <h3 id="dyld-2-x"   >
+          <a href="#dyld-2-x" class="heading-link"><i class="fas fa-link"></i></a><a href="#dyld-2-x" class="headerlink" title="dyld 2.x"></a>dyld 2.x</h3>
+      <ul>
+<li><p>2004 - 2017</p>
+</li>
+<li><p>特性</p>
+<ul>
+<li><p>Codesign</p>
+<ul>
+<li>以页为单位，Mach-O 文件的每一页都要被 hash，在被载入时进行与  __LINKEDIT 中的信息进行校验。</li>
+</ul>
+</li>
+<li><p>ASLR</p>
+<ul>
+<li>Mach-O 文件被加载到随机的地址上。</li>
+</ul>
+</li>
+<li><p>Bounds Checking</p>
+<ul>
+<li>避免恶意的二进制文件的加入。</li>
+</ul>
+</li>
+<li><p>Shared cache</p>
+<ul>
+<li>共享缓存是包含所有系统 dylib 的单个文件，代替了 PreBuilding。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>流程</p>
+<ul>
+<li>解析 Mach-O 的 Header 与 Load Commands，递归加载其依赖的动态库。</li>
+<li>映射所有 Mach-O 文件到 App 的地址空间。</li>
+<li>符号查找</li>
+<li>Rebase &amp; Bind</li>
+<li>运行初始化程序</li>
+</ul>
+</li>
+</ul>
+
+        <h3 id="dyld-3-x"   >
+          <a href="#dyld-3-x" class="heading-link"><i class="fas fa-link"></i></a><a href="#dyld-3-x" class="headerlink" title="dyld 3.x"></a>dyld 3.x</h3>
+      <ul>
+<li><p>2017 - 至今</p>
+</li>
+<li><p>可缓存阶段 “解析Mach-O文件、找到对应依赖库、执行符号查找”，除了软件更新或者更改了磁盘上的库，负责每次启动的App依赖库符号不变、库中符号始终处于相同偏移量。因此将可缓存挪到了最前面，并将执行结果以闭包形式写入到磁盘。</p>
+</li>
+<li><p>dyld 被分为 3 个组件</p>
+<ul>
+<li>进程外的 Mach-O 解析器 / 编译器</li>
+<li>进程内的引擎，用来启动闭包缓存</li>
+<li>启动闭包缓存服务</li>
+</ul>
+</li>
+<li><p>流程</p>
+<ul>
+<li>解析 Mach-O文件</li>
+<li>找到所有依赖库</li>
+<li>符号查找</li>
+<li>读取启动闭包</li>
+<li>验证启动闭包</li>
+<li>映射 Mach-O 文件到 App的地址空间</li>
+<li>Rebase &amp; Bind</li>
+<li>运行初始化程序</li>
+</ul>
+</li>
+</ul>
+
+        <h2 id="Mach-O"   >
+          <a href="#Mach-O" class="heading-link"><i class="fas fa-link"></i></a><a href="#Mach-O" class="headerlink" title="Mach-O"></a>Mach-O</h2>
+      
+        <h3 id="Mach-O-是系统不同运行时期可执行文件的文件类型统称，主要分为-3-种"   >
+          <a href="#Mach-O-是系统不同运行时期可执行文件的文件类型统称，主要分为-3-种" class="heading-link"><i class="fas fa-link"></i></a><a href="#Mach-O-是系统不同运行时期可执行文件的文件类型统称，主要分为-3-种" class="headerlink" title="Mach-O 是系统不同运行时期可执行文件的文件类型统称，主要分为 3 种"></a>Mach-O 是系统不同运行时期可执行文件的文件类型统称，主要分为 3 种</h3>
+      <ul>
+<li>Executable：可执行文件，是 APP 中的主要 2 进制文件</li>
+<li>Dylib：动态库，在其他平台也叫 DSO / DLL</li>
+<li>Bundle：苹果平台特有的类型，是无法被链接的 Dylib。是能在运行时通过 dlopen() 加载</li>
+</ul>
+
+        <h3 id="文件格式"   >
+          <a href="#文件格式" class="heading-link"><i class="fas fa-link"></i></a><a href="#文件格式" class="headerlink" title="文件格式"></a>文件格式</h3>
+      <ul>
+<li><p>Header：包含了 Mach-O 文件的基本信息。如：CPU 架构、文件类型、加载指令数量等</p>
+</li>
+<li><p>Load Commands：跟在 Header 后面的加载命令区，包含文件的组织架构、在虚拟内存的布局方式，在调用时知道如何设置和加载二进制文件。</p>
+</li>
+<li><p>Data：包含 Load Commands 中需要的各个  Segment 的数据。</p>
+</li>
+<li><p>绝大多数 Mach-O 包含以下三种类型的 Segment</p>
+<ul>
+<li>__TEXT：代码段，包含头文件、代码、常量。只读不可修改</li>
+<li>__DATA：数据段，包含全局变量、静态变量。可读可写</li>
+<li>__LINKEDIT：如何加载程序，包含方法和变量的元数据(位置、偏移量)，以及代码签名等信息。只读不可修改</li>
+</ul>
+</li>
+</ul>
+
+        <h3 id="Mach-O-Universal-Files"   >
+          <a href="#Mach-O-Universal-Files" class="heading-link"><i class="fas fa-link"></i></a><a href="#Mach-O-Universal-Files" class="headerlink" title="Mach-O Universal  Files"></a>Mach-O Universal  Files</h3>
+      <ul>
+<li>支持多个架构的 Mach-O 文件通常被称为通用二进制文件，也称胖二进制文件。</li>
+<li>胖二进制文件起始处有一个 Fat Header，包含所有的架构以及它们在文件中的偏移量。</li>
+</ul>
+
+        <h2 id="虚拟内存"   >
+          <a href="#虚拟内存" class="heading-link"><i class="fas fa-link"></i></a><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h2>
+      
+        <h3 id="虚拟内存是建立在物理内存和进程之间的中间层。是一个连续的逻辑地址空间，而且逻辑地址可以没有对应的实际物理地址，也可以让多个逻辑地址对应到同一个物理地址上。"   >
+          <a href="#虚拟内存是建立在物理内存和进程之间的中间层。是一个连续的逻辑地址空间，而且逻辑地址可以没有对应的实际物理地址，也可以让多个逻辑地址对应到同一个物理地址上。" class="heading-link"><i class="fas fa-link"></i></a><a href="#虚拟内存是建立在物理内存和进程之间的中间层。是一个连续的逻辑地址空间，而且逻辑地址可以没有对应的实际物理地址，也可以让多个逻辑地址对应到同一个物理地址上。" class="headerlink" title="虚拟内存是建立在物理内存和进程之间的中间层。是一个连续的逻辑地址空间，而且逻辑地址可以没有对应的实际物理地址，也可以让多个逻辑地址对应到同一个物理地址上。"></a>虚拟内存是建立在物理内存和进程之间的中间层。是一个连续的逻辑地址空间，而且逻辑地址可以没有对应的实际物理地址，也可以让多个逻辑地址对应到同一个物理地址上。</h3>
+      
+        <h3 id="缺页中断-Page-Fault"   >
+          <a href="#缺页中断-Page-Fault" class="heading-link"><i class="fas fa-link"></i></a><a href="#缺页中断-Page-Fault" class="headerlink" title="缺页中断(Page Fault)"></a>缺页中断(Page Fault)</h3>
+      <ul>
+<li>当进程访问一个没有对应物理地址的逻辑地址时，会发生 Page Fault</li>
+</ul>
+
+        <h3 id="懒加载-Lazy-Reading"   >
+          <a href="#懒加载-Lazy-Reading" class="heading-link"><i class="fas fa-link"></i></a><a href="#懒加载-Lazy-Reading" class="headerlink" title="懒加载(Lazy Reading)"></a>懒加载(Lazy Reading)</h3>
+      <ul>
+<li>某个想要读取的页没有存在于内存会触发 Page Fault，系统通过 mmap() 函数读取指定页，这个过程成为 Lazy Reading。mmap() 函数可以将文件的部分内容映射到地址范围，而不是整个文件。</li>
+</ul>
+
+        <h3 id="写时复制-Copy-On-Write"   >
+          <a href="#写时复制-Copy-On-Write" class="heading-link"><i class="fas fa-link"></i></a><a href="#写时复制-Copy-On-Write" class="headerlink" title="写时复制(Copy On Write)"></a>写时复制(Copy On Write)</h3>
+      <ul>
+<li>当进程需要对某一页的内容进行修改时，内核会把需要修改的部分先复制一份，然后再修改，那个重新把逻辑地址映射到物理地址上去。</li>
+</ul>
+
+        <h3 id="Dirty-Page-amp-Clean-Page"   >
+          <a href="#Dirty-Page-amp-Clean-Page" class="heading-link"><i class="fas fa-link"></i></a><a href="#Dirty-Page-amp-Clean-Page" class="headerlink" title="Dirty Page &amp; Clean Page"></a>Dirty Page &amp; Clean Page</h3>
+      <ul>
+<li>Dirty Page：包含特定进程信息的页</li>
+<li>Clean Page：不包含特定进程信息的页。如果需要，内核可以重新生成 Clean Page。</li>
+</ul>
+
+        <h3 id="共享内存-Shared-RAM"   >
+          <a href="#共享内存-Shared-RAM" class="heading-link"><i class="fas fa-link"></i></a><a href="#共享内存-Shared-RAM" class="headerlink" title="共享内存(Shared RAM)"></a>共享内存(Shared RAM)</h3>
+      <ul>
+<li>当多个 Mach-O 依赖同一个 Dylib(eg. UIKit) 时，系统会让几个 Mach-O 的调用 Dylib 的逻辑地址指向同一块物理内存空间，从而实现内存共享。Dirty Page 为进程独有，不能被共享。</li>
+</ul>
+
+        <h2 id="优化方式"   >
+          <a href="#优化方式" class="heading-link"><i class="fas fa-link"></i></a><a href="#优化方式" class="headerlink" title="优化方式"></a>优化方式</h2>
+      <p>减少动态库或将多个动态库合并成一个</p>
+<p>减少静态初始化</p>
+<p>+load 方法内容放到首屏渲染后再执行，或使用 +initialize() 方法替换。</p>
+<p>在 didFinishLaunchingWithOptions 和首屏渲染中只保留必要的初始化任务。</p>
+
+        <h2 id="如何检测"   >
+          <a href="#如何检测" class="heading-link"><i class="fas fa-link"></i></a><a href="#如何检测" class="headerlink" title="如何检测"></a>如何检测</h2>
+      <p>hook</p>
+<p>Instrument - App Lunch / 本地测量</p>
+<p>Organizer - Launch Time / 线上数据</p>
+<p>启动参数- DYLD_PRINT_STATISTICS=ture</p>
+
+        <h2 id="参考链接"   >
+          <a href="#参考链接" class="heading-link"><i class="fas fa-link"></i></a><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2>
+      <p><span class="exturl"><a class="exturl__link"   target="_blank" rel="noopener" href="https://xiaozhuanlan.com/topic/4690823715" >老司机技术周报 - 优化 APP 启动</a><span class="exturl__icon"><i class="fas fa-external-link-alt"></i></span></span></p>
+<p>WWDC19 / 423 - 优化 APP 启动](<span class="exturl"><a class="exturl__link"   target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2019/423/" >https://developer.apple.com/videos/play/wwdc2019/423/</a><span class="exturl__icon"><i class="fas fa-external-link-alt"></i></span></span>)</p>
+<p><span class="exturl"><a class="exturl__link"   target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2017/413" >WWDC17 / 413 - App 启动时间: 过去、现在和将来</a><span class="exturl__icon"><i class="fas fa-external-link-alt"></i></span></span></p>
+<p><span class="exturl"><a class="exturl__link"   target="_blank" rel="noopener" href="https://huang-libo.github.io/posts/Optimizing-App-Startup-Time/#%E7%9B%AE%E5%BD%95" >WWDC16 / 406 - 优化 App 启动时间</a><span class="exturl__icon"><i class="fas fa-external-link-alt"></i></span></span></p>
+</div><footer class="post-footer"><div class="post-ending ending"><div class="ending__text">------ 本文结束，感谢您的阅读 ------</div></div><div class="post-copyright copyright"><div class="copyright-author"><span class="copyright-author__name">本文作者: </span><span class="copyright-author__value"><a href="https://xuhaodong1.github.io">nihao</a></span></div><div class="copyright-link"><span class="copyright-link__name">本文链接: </span><span class="copyright-link__value"><a href="https://xuhaodong1.github.io/2022/03/07/iOS%20%E5%90%AF%E5%8A%A8%E4%BC%98%E5%8C%96/">https://xuhaodong1.github.io/2022/03/07/iOS%20%E5%90%AF%E5%8A%A8%E4%BC%98%E5%8C%96/</a></span></div><div class="copyright-notice"><span class="copyright-notice__name">版权声明: </span><span class="copyright-notice__value">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" rel="external nofollow" target="_blank">BY-NC-SA</a> 许可协议。转载请注明出处！</span></div></div><div class="post-tags"><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="https://xuhaodong1.github.io/tags/App%E5%90%AF%E5%8A%A8/">App启动</a></span></div><nav class="post-paginator paginator"><div class="paginator-next"><a class="paginator-next__link" href="/2022/03/07/2021-11-9-%E4%B8%8D%E4%BB%A5%E5%8A%9F%E5%88%A9%E4%B8%BA%E7%9B%AE%E7%9A%84/"><span class="paginator-prev__text">不以功利为目的</span><span class="paginator-next__icon"><i class="fas fa-angle-right"></i></span></a></div></nav></footer></div></div><div class="comments" id="comments"><div id="utterances-container"></div></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><div class="sidebar-nav"><span class="sidebar-nav-toc current">文章目录</span><span class="sidebar-nav-ov">站点概览</span></div><section class="sidebar-toc"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">
+          前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">
+          启动流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.1.</span> <span class="toc-text">
+          启动类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%AF%E5%8A%A8%E9%98%B6%E6%AE%B5"><span class="toc-number">2.2.</span> <span class="toc-text">
+          启动阶段</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#dyld"><span class="toc-number">3.</span> <span class="toc-text">
+          dyld</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#dyld-1-x"><span class="toc-number">3.1.</span> <span class="toc-text">
+          dyld 1.x</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#dyld-2-x"><span class="toc-number">3.2.</span> <span class="toc-text">
+          dyld 2.x</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#dyld-3-x"><span class="toc-number">3.3.</span> <span class="toc-text">
+          dyld 3.x</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Mach-O"><span class="toc-number">4.</span> <span class="toc-text">
+          Mach-O</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Mach-O-%E6%98%AF%E7%B3%BB%E7%BB%9F%E4%B8%8D%E5%90%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E6%9C%9F%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E7%9A%84%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B%E7%BB%9F%E7%A7%B0%EF%BC%8C%E4%B8%BB%E8%A6%81%E5%88%86%E4%B8%BA-3-%E7%A7%8D"><span class="toc-number">4.1.</span> <span class="toc-text">
+          Mach-O 是系统不同运行时期可执行文件的文件类型统称，主要分为 3 种</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F"><span class="toc-number">4.2.</span> <span class="toc-text">
+          文件格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mach-O-Universal-Files"><span class="toc-number">4.3.</span> <span class="toc-text">
+          Mach-O Universal  Files</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98"><span class="toc-number">5.</span> <span class="toc-text">
+          虚拟内存</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E6%98%AF%E5%BB%BA%E7%AB%8B%E5%9C%A8%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E5%92%8C%E8%BF%9B%E7%A8%8B%E4%B9%8B%E9%97%B4%E7%9A%84%E4%B8%AD%E9%97%B4%E5%B1%82%E3%80%82%E6%98%AF%E4%B8%80%E4%B8%AA%E8%BF%9E%E7%BB%AD%E7%9A%84%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%EF%BC%8C%E8%80%8C%E4%B8%94%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80%E5%8F%AF%E4%BB%A5%E6%B2%A1%E6%9C%89%E5%AF%B9%E5%BA%94%E7%9A%84%E5%AE%9E%E9%99%85%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80%EF%BC%8C%E4%B9%9F%E5%8F%AF%E4%BB%A5%E8%AE%A9%E5%A4%9A%E4%B8%AA%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80%E5%AF%B9%E5%BA%94%E5%88%B0%E5%90%8C%E4%B8%80%E4%B8%AA%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80%E4%B8%8A%E3%80%82"><span class="toc-number">5.1.</span> <span class="toc-text">
+          虚拟内存是建立在物理内存和进程之间的中间层。是一个连续的逻辑地址空间，而且逻辑地址可以没有对应的实际物理地址，也可以让多个逻辑地址对应到同一个物理地址上。</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%BA%E9%A1%B5%E4%B8%AD%E6%96%AD-Page-Fault"><span class="toc-number">5.2.</span> <span class="toc-text">
+          缺页中断(Page Fault)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%87%92%E5%8A%A0%E8%BD%BD-Lazy-Reading"><span class="toc-number">5.3.</span> <span class="toc-text">
+          懒加载(Lazy Reading)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%99%E6%97%B6%E5%A4%8D%E5%88%B6-Copy-On-Write"><span class="toc-number">5.4.</span> <span class="toc-text">
+          写时复制(Copy On Write)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Dirty-Page-amp-Clean-Page"><span class="toc-number">5.5.</span> <span class="toc-text">
+          Dirty Page &amp; Clean Page</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98-Shared-RAM"><span class="toc-number">5.6.</span> <span class="toc-text">
+          共享内存(Shared RAM)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E6%96%B9%E5%BC%8F"><span class="toc-number">6.</span> <span class="toc-text">
+          优化方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%A3%80%E6%B5%8B"><span class="toc-number">7.</span> <span class="toc-text">
+          如何检测</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-number">8.</span> <span class="toc-text">
+          参考链接</span></a></li></ol></section><!-- ov = overview--><section class="sidebar-ov hide"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/avatar.jpeg" alt="avatar"></div><p class="sidebar-ov-author__text">不以功利为目的.</p></div><div class="sidebar-ov-social"><a class="sidebar-ov-social-item" href="https://github.com/xuhaodong1" target="_blank" rel="noopener" data-popover="Github" data-popover-pos="up"><span class="sidebar-ov-social-item__icon"><i class="fab fa-github"></i></span></a><a class="sidebar-ov-social-item" href="https://xuhaodong1.github.io/images/wechat.jpeg" target="_blank" rel="noopener" data-popover="微信" data-popover-pos="up"><span class="sidebar-ov-social-item__icon"><i class="fab fa-weixin"></i></span></a></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--posts" href="/archives/"><div class="sidebar-ov-state-item__count">5</div><div class="sidebar-ov-state-item__name">归档</div></a><a class="sidebar-ov-state-item sidebar-ov-state-item--categories" href="/categories/"><div class="sidebar-ov-state-item__count">2</div><div class="sidebar-ov-state-item__name">分类</div></a><a class="sidebar-ov-state-item sidebar-ov-state-item--tags" href="/tags/"><div class="sidebar-ov-state-item__count">5</div><div class="sidebar-ov-state-item__name">标签</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" data-popover="知识共享许可协议" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section><div class="sidebar-reading"><div class="sidebar-reading-info"><span class="sidebar-reading-info__text">你已阅读了 </span><span class="sidebar-reading-info__num">0</span><span class="sidebar-reading-info__perc">%</span></div><div class="sidebar-reading-line"></div></div></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2021~2022</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>nihao201</span></div><div><span>由 <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a> 强力驱动</span><span> v5.4.1</span><span class="footer__devider">|</span><span>主题 - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.6.2</span></div><script type="text/javascript" id="maid-script" src="https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js?v=undefined"></script><script>if (window.mermaid) {
+  var options = JSON.parse(document.getElementById('maid-script').getAttribute('mermaidoptioins'));
+  mermaid.initialize(options);
+}</script></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script><script>function loadUtterances() {
+  var d = document, s = d.createElement('script');
+  var container = d.getElementById('utterances-container');
+
+  if (!container) {
+    return;
+  }
+  s.src = 'https://utteranc.es/client.js';
+  s.setAttribute('repo', 'xuhaodong1/xuhaodong1.github.io');
+  s.setAttribute('issue-term', 'title');
+  s.setAttribute('label', 'utterances');
+  s.setAttribute('theme', 'github-light');
+  s.setAttribute('crossorigin', 'anonymous');
+  s.setAttribute('async', '');
+  if (false) {
+    s.setAttribute('data-pjax-rm', '');
+  }
+  container.append(s);
+}
+
+if (false) {
+  loadUtterances();
+} else {
+  window.addEventListener('DOMContentLoaded', loadUtterances, false);
+}</script><script src="/js/utils.js?v=2.6.2"></script><script src="/js/stun-boot.js?v=2.6.2"></script><script src="/js/scroll.js?v=2.6.2"></script><script src="/js/header.js?v=2.6.2"></script><script src="/js/sidebar.js?v=2.6.2"></script></body></html>
