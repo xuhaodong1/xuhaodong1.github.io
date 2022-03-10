@@ -22,7 +22,7 @@ canonical: true
 # ---------------------------------------------------------------
 # Google Webmaster tools verification setting
 # See: https://www.google.com/webmasters/
-google_site_verification:
+google_site_verification: <meta name="google-site-verification" content="hFc7D0nhWN4O0yFHqNZJV2kd6x4RmgWcI2eqeLKXUu8" />
 
 # Bing Webmaster tools verification setting
 # See: https://www.bing.com/webmaster/
@@ -384,7 +384,7 @@ reward:
 # The information of post.
 post_meta:
   # Only show by icon.
-  icon_only: false
+  icon_only: true
   # The create time of post.
   created:
     enable: true
@@ -392,14 +392,14 @@ post_meta:
     icon: far fa-calendar-plus
   # The update time of post.
   updated:
-    enable: true
+    enable: false
     # Icon name in FontAwesome, see: https://fontawesome.com/icons
     icon: far fa-calendar-check
   # The approximate reading time of post.
   # Dependency: https://github.com/willin/hexo-wordcount/
   # !!! Don't enable this before install dependency by `npm install hexo-wordcount --save` in hexo root directory.
   reading_time:
-    enable: false
+    enable: true
     # Icon name in FontAwesome, see: https://fontawesome.com/icons
     icon: far fa-clock
     # Set reading speed to count reading time.
@@ -412,7 +412,7 @@ post_meta:
   # Dependency: https://github.com/willin/hexo-wordcount/
   # !!! Don't enable this before install dependency by `npm install hexo-wordcount --save` in hexo root directory.
   word_count:
-    enable: false
+    enable: true
     # Icon name in FontAwesome, see: https://fontawesome.com/icons
     icon: far fa-file-word
 
