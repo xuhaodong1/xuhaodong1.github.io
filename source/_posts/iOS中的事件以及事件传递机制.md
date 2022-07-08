@@ -1,6 +1,6 @@
 ---
-title: "Xcode 中的调试技巧"
-date: 2022-06-01 09:49:00
+title: "iOS中的事件以及事件传递机制"
+date: 2022-07-08 09:49:00
 categories:
   - iOS
 tags:
