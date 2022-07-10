@@ -101,11 +101,11 @@ open var editingInteractionConfiguration: UIEditingInteractionConfiguration { ge
 
 <img src="/images/blog/image-20220620215940554.png" alt="image-20220620215940554" style="zoom:80%;" />
 
-当触摸事件发生时，被用户面板即硬件由电信号采集到，之后再传递给 ```IOKit.framework```，并将事件封装为 ```IOHIDEvent```；之后通过 IPC 转发给 SpringBoard 进程；再由 SpringBoard 进程再次通过 IPC 将事件传递给合适的 APP 进程；由主线程 RunLoop 进行处理，先触发 ```source1``` 回调，后触发了 ```source0``` 回调，并将事件封装为 ```UIEvent```；然后将事件加入 ```UIApplication``` 对象的事件队列中，出队后，开始寻找最佳响应者 ```hit-Testing```，找到最佳响应者后。由 ```UIApplication``` 对象 从 ```sendEvent``` 方法将事件传递给 ```window``` 对象，再由 ```window``` 对象 ```sendEvent``` 到最佳响应者，随后进行事件响应以及传递。寻找最佳响应者以及事件响应后面会重点提及，这里先简单对 IOKit.framework、SpringBoard 以及 IPC 进行介绍：
+当触摸事件发生时，被用户面板即硬件由电信号采集到，之后再传递给 ```IOKit.framework```，并将事件封装为 ```IOHIDEvent```；之后通过 IPC 转发给 ```SpringBoard``` 进程；再由 ```SpringBoard``` 进程再次通过 ```IPC``` 将事件传递给合适的 APP 进程；由主线程 ```RunLoop``` 进行处理，先触发 ```source1``` 回调，后触发了 ```source0``` 回调，并将事件封装为 ```UIEvent```；然后将事件加入 ```UIApplication``` 对象的事件队列中，出队后，开始寻找最佳响应者 ```hit-Testing```，找到最佳响应者后。由 ```UIApplication``` 对象 从 ```sendEvent``` 方法将事件传递给 ```window``` 对象，再由 ```window``` 对象 ```sendEvent``` 到最佳响应者，随后进行事件响应以及传递。寻找最佳响应者以及事件响应后面会重点提及，这里先简单对 IOKit.framework、SpringBoard 以及 IPC 进行简单介绍：
 
-* IOKit.framework：
-* SpringBoard：
-* IPC：
+* IOKit.framework：它为设备驱动程序(IOKit)的用户态组件，IOKit 来源于 NeXTSTEP 的 DriverKit，IOKit.framework 提供了内核态以及用户态双向通信的接口。
+* SpringBoard：iOS 中的 SpringBoard 相当于 macOS 中的 Finder，它向用户提供了熟悉的图标界面，它记录了多触摸事件、加速器事件、按压事件等。
+* IPC：macOS 和 iOS 中的进程间通信(InterProcess Communication) 是基于 mach，mach 是 iOS 和 macOS 中的核心，也是有别于其他操作系统的重点，mach 采用微内核的概念，即内核仅提供一些必要的功能，其他工作由用户态实现。mach 的 IPC 是通过在两个端口之间发送消息实现，具体可以参考 《深入解析Mac OS X & iOS 操作系统》。
 
 ### 寻找最佳响应者
 
@@ -279,3 +279,5 @@ override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
 [Apple - UIGestureRecognizer](https://developer.apple.com/documentation/uikit/uigesturerecognizer?language=objc)
 
 [UIKit: UIControl](http://southpeak.github.io/2015/12/13/cocoa-uikit-uicontrol/)
+
+《深入解析Mac OS X & iOS 操作系统》
