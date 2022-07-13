@@ -211,7 +211,7 @@ final @objc - 调用时静态派发，但会将函数注册到 objective-c runti
 
 **virtual table / protocol witness table**
 
-<img src="/images/blog/virtual-dispatch.png" alt="A diagram showing the memory offsets for method1, method2, and method3 in ParentClass and ChildClass." style="zoom:80%;" />
+<img src="/images/blog/1_4YaI2HPK48IqgyK3DpU_VQ.png" alt="A diagram showing the memory offsets for method1, method2, and method3 in ParentClass and ChildClass." style="zoom:80%;" />
 
 相较于静态派发，速度更慢，需要两次读取地址与一次跳转，同时编译器无优化操作，将自身作为实例作为隐含参数传递到方法中。例如下面一段协议类型的方法调用的 **SIL** 代码如下：
 
