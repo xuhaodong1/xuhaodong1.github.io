@@ -20,7 +20,10 @@ UIResponder 中包含了许多处理事件的方法，如果我们想在这个�
 
 
 
-UIView：如果 view 是 UI.."><meta name="generator" content="Hexo 5.4.2"></head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">nihao's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">iOS中的事件以及事件传递机制</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%8D%E5%BA%94%E8%80%85-amp-%E5%93%8D%E5%BA%94%E8%80%85%E9%93%BE"><span class="toc-text">响应者 &amp; 响应者链</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6-amp-%E8%B0%81%E6%98%AF%E4%BA%8B%E4%BB%B6%E7%9A%84%E7%AC%AC%E4%B8%80%E5%93%8D%E5%BA%94%E8%80%85"><span class="toc-text">事件 &amp; 谁是事件的第一响应者</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E6%B5%81%E7%A8%8B"><span class="toc-text">触摸事件流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E6%9C%80%E4%BD%B3%E5%93%8D%E5%BA%94%E8%80%85"><span class="toc-text">寻找最佳响应者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%93%8D%E5%BA%94%E4%BB%A5%E5%8F%8A%E4%BC%A0%E9%80%92"><span class="toc-text">触摸事件的响应以及传递</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#UIGestureRecognizer"><span class="toc-text">UIGestureRecognizer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#UIControl"><span class="toc-text">UIControl</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E5%AE%9E%E8%B7%B5"><span class="toc-text">应用实践</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%A9%E5%A4%A7%E5%93%8D%E5%BA%94%E5%8C%BA%E5%9F%9F"><span class="toc-text">扩大响应区域</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B9%E6%8D%AE%E8%A7%A6%E6%91%B8%E5%AE%9E%E6%97%B6%E4%BF%AE%E6%94%B9-view-%E4%BD%8D%E7%BD%AE"><span class="toc-text">根据触摸实时修改 view 位置</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%94%97"><span class="toc-text">🔗</span></a></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/UI"><i class="tag post-item-tag">UI</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">iOS中的事件以及事件传递机制</h1><time class="has-text-grey" datetime="2022-07-08T09:49:00.000Z">2022-07-08</time><article class="mt-2 post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>iOS 中有 8 种事件，本文重点介绍触摸事件的传递机制与响应流程。可以带着一下问题进行阅读：</p>
+UIView：如果 view 是 UI.."><meta name="generator" content="Hexo 5.4.2">
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+<link rel="alternate" href="/atom.xml" title="nihao' Blog" type="application/atom+xml">
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">nihao's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">iOS中的事件以及事件传递机制</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%8D%E5%BA%94%E8%80%85-amp-%E5%93%8D%E5%BA%94%E8%80%85%E9%93%BE"><span class="toc-text">响应者 &amp; 响应者链</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6-amp-%E8%B0%81%E6%98%AF%E4%BA%8B%E4%BB%B6%E7%9A%84%E7%AC%AC%E4%B8%80%E5%93%8D%E5%BA%94%E8%80%85"><span class="toc-text">事件 &amp; 谁是事件的第一响应者</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E6%B5%81%E7%A8%8B"><span class="toc-text">触摸事件流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E6%9C%80%E4%BD%B3%E5%93%8D%E5%BA%94%E8%80%85"><span class="toc-text">寻找最佳响应者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A6%E6%91%B8%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%93%8D%E5%BA%94%E4%BB%A5%E5%8F%8A%E4%BC%A0%E9%80%92"><span class="toc-text">触摸事件的响应以及传递</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#UIGestureRecognizer"><span class="toc-text">UIGestureRecognizer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#UIControl"><span class="toc-text">UIControl</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E5%AE%9E%E8%B7%B5"><span class="toc-text">应用实践</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%A9%E5%A4%A7%E5%93%8D%E5%BA%94%E5%8C%BA%E5%9F%9F"><span class="toc-text">扩大响应区域</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B9%E6%8D%AE%E8%A7%A6%E6%91%B8%E5%AE%9E%E6%97%B6%E4%BF%AE%E6%94%B9-view-%E4%BD%8D%E7%BD%AE"><span class="toc-text">根据触摸实时修改 view 位置</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%94%97"><span class="toc-text">🔗</span></a></li></ol></div><div class="column is-9"><header class="my-4"><a href="/tags/UI"><i class="tag post-item-tag">UI</i></a></header><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">iOS中的事件以及事件传递机制</h1><time class="has-text-grey" datetime="2022-07-08T09:49:00.000Z">2022-07-08</time><article class="mt-2 post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>iOS 中有 8 种事件，本文重点介绍触摸事件的传递机制与响应流程。可以带着一下问题进行阅读：</p>
 <ul>
 <li><p>iOS 中有哪些事件类型，谁来进行事件的响应，怎么来响应呢？</p>
 </li>
@@ -38,7 +41,7 @@ UIView：如果 view 是 UI.."><meta name="generator" content="Hexo 5.4.2"></hea
 <li><p><code>UIResponder</code> 中包含了许多处理事件的方法，如果我们想在这个对象里响应事件，那么重写这个方法即可。</p>
 </li>
 </ul>
-<img src="/images/blog/responderChain.png" alt="A flow diagram: On the left, a sample app contains a label (UILabel), a text field for the user to input text (UITextField), and a button (UIButton) to  press after entering text in the field. On the right, the flow diagram shows how, after the user pressed the button, the event moves through the responder chain—from UIView, to UIViewController, to UIWindow, UIApplication, and finally to UIApplicationDelegate." style="zoom:67%;" />
+<img src="/images/blog/responderChain.png" alt="A flow diagram: On the left, a sample app contains a label (UILabel), a text field for the user to input text (UITextField), and a button (UIButton) to  press after entering text in the field. On the right, the flow diagram shows how, after the user pressed the button, the event moves through the responder chain—from UIView, to UIViewController, to UIWindow, UIApplication, and finally to UIApplicationDelegate." style="zoom:67%;">
 
 <ul>
 <li><strong>UIView</strong>：如果 <code>view</code> 是 <code>UIViewController</code> 的 <code>root view</code>，下一个响应者为 <code>UIViewController</code>，否则下一个响应者为<code>superview</code>。</li>
@@ -129,14 +132,14 @@ open func remoteControlReceived(with event: UIEvent?)
 @available(iOS 13.0, *)
 open func validate(_ command: UICommand)
 @available(iOS 3.0, *)
-open var undoManager: UndoManager? &#123; get &#125;
+open var undoManager: UndoManager? { get }
 @available(iOS 13.0, *)
-open var editingInteractionConfiguration: UIEditingInteractionConfiguration &#123; get &#125;
+open var editingInteractionConfiguration: UIEditingInteractionConfiguration { get }
 </code></pre>
 <ul>
 <li>加速器事件、陀螺事件、磁力仪事件不跟随响应者链，<code>Core Motion</code> 将这些事件直接传递给指定的委任对象。</li>
 </ul>
-<h2 id="触摸事件流程"><a href="#触摸事件流程" class="headerlink" title="触摸事件流程"></a>触摸事件流程</h2><img src="/images/blog/image-20220620215940554.png" alt="image-20220620215940554" style="zoom:80%;" />
+<h2 id="触摸事件流程"><a href="#触摸事件流程" class="headerlink" title="触摸事件流程"></a>触摸事件流程</h2><img src="/images/blog/image-20220620215940554.png" alt="image-20220620215940554" style="zoom:80%;">
 
 <p>当触摸事件发生时，被用户面板即硬件由电信号采集到，之后再传递给 <code>IOKit.framework</code>，并将事件封装为 <code>IOHIDEvent</code>；之后通过 IPC 转发给 <code>SpringBoard</code> 进程；再由 <code>SpringBoard</code> 进程再次通过 <code>IPC</code> 将事件传递给合适的 APP 进程；由主线程 <code>RunLoop</code> 进行处理，先触发 <code>source1</code> 回调，后触发了 <code>source0</code> 回调，并将事件封装为 <code>UIEvent</code>；然后将事件加入 <code>UIApplication</code> 对象的事件队列中，出队后，开始寻找最佳响应者 <code>hit-Testing</code>，找到最佳响应者后。由 <code>UIApplication</code> 对象 从 <code>sendEvent</code> 方法将事件传递给 <code>window</code> 对象，再由 <code>window</code> 对象 <code>sendEvent</code> 到最佳响应者，随后进行事件响应以及传递。寻找最佳响应者以及事件响应后面会重点提及，这里先简单对 IOKit.framework、SpringBoard 以及 IPC 进行简单介绍：</p>
 <ul>
@@ -152,22 +155,22 @@ open var editingInteractionConfiguration: UIEditingInteractionConfiguration &#12
 <ul>
 <li><code>hitTest(_ point: CGPoint, with event: UIEvent?)</code> <strong>模拟代码</strong></li>
 </ul>
-<pre><code class="swift">override func hitTest(_ point: CGPoint, with event: UIEvent?) -&gt; UIView? &#123;
-    guard self.isUserInteractionEnabled &amp;&amp; !self.isHidden &amp;&amp; self.alpha &gt; 0.01 else &#123;
+<pre><code class="swift">override func hitTest(_ point: CGPoint, with event: UIEvent?) -&gt; UIView? {
+    guard self.isUserInteractionEnabled &amp;&amp; !self.isHidden &amp;&amp; self.alpha &gt; 0.01 else {
         return nil
-    &#125;
-    if self.point(inside: point, with: event) &#123;
-        for subview in subviews.reversed() &#123;
+    }
+    if self.point(inside: point, with: event) {
+        for subview in subviews.reversed() {
             let convertedPoint = subview.convert(point, from: self)
             let hitTestView = subview.hitTest(convertedPoint, with: event)
-            if let hitTestView = hitTestView &#123;
+            if let hitTestView = hitTestView {
                 return hitTestView
-            &#125;
-        &#125;
+            }
+        }
       return self
-    &#125;
+    }
     return nil
-&#125;
+}
 </code></pre>
 <ol>
 <li><p>需要 <code>isUserInteractionEnabled</code> 为 <code>true</code>、<code>isHidden</code> 为 <code>fasle</code> 且透明度 &gt; 0.01</p>
@@ -180,15 +183,15 @@ open var editingInteractionConfiguration: UIEditingInteractionConfiguration &#12
 <ul>
 <li><code>point(inside point: CGPoint, with event: UIEvent?)</code> <strong>模拟代码</strong></li>
 </ul>
-<pre><code class="swift">override func point(inside point: CGPoint, with event: UIEvent?) -&gt; Bool &#123;
+<pre><code class="swift">override func point(inside point: CGPoint, with event: UIEvent?) -&gt; Bool {
     return bounds.contains(point)
-&#125;
+}
 </code></pre>
 <ol>
 <li>判断当前 bounds 是否包含该点。</li>
 </ol>
 <h3 id="触摸事件的响应以及传递"><a href="#触摸事件的响应以及传递" class="headerlink" title="触摸事件的响应以及传递"></a>触摸事件的响应以及传递</h3><p>找到最佳响应者后，<code>UIApplication</code> 对象 <code>sendEvent</code> 到响应该视图的 <code>UIWindow</code>，再有 <code>UIWindow</code> 对象 <code>sendEvent</code> 到最佳响应者，这一点可以通过查看调用栈帧看出：</p>
-<img src="/images/blog/image-20220704022615988.png" alt="image-20220704022615988" style="zoom:100%;" />
+<img src="/images/blog/image-20220704022615988.png" alt="image-20220704022615988" style="zoom:100%;">
 
 <p>传递给最佳响应者后，便可以进行事件的响应了，对于触摸事件来说，调用上述提到的 5 个方法即代表响应。事件的拦截是通过 <code>open func touchesBegan(_ touches: Set&lt;UITouch&gt;, with event: UIEvent?)</code> 实现的，传递方式与规则见上文中 <strong>响应者 &amp; 响应者链</strong>：</p>
 <ul>
@@ -248,33 +251,33 @@ open func cancelTracking(with event: UIEvent?) // event may be nil if cancelled 
 <h3 id="应用实践"><a href="#应用实践" class="headerlink" title="应用实践"></a>应用实践</h3><h4 id="扩大响应区域"><a href="#扩大响应区域" class="headerlink" title="扩大响应区域"></a>扩大响应区域</h4><ol>
 <li>重写本视图的 <code>func point(inside point: CGPoint, with event: UIEvent?) -&gt; Bool</code> </li>
 </ol>
-<pre><code class="swift">override func point(inside point: CGPoint, with event: UIEvent?) -&gt; Bool &#123;
+<pre><code class="swift">override func point(inside point: CGPoint, with event: UIEvent?) -&gt; Bool {
     // 将响应区域扩大 30
     return self.bounds.inset(by: .init(top: -30, left: -30, bottom: -30, right: -30)).contains(point)
-&#125;
+}
 </code></pre>
 <ol start="2">
 <li>重写父视图的 <code>func hitTest(_ point: CGPoint, with event: UIEvent?) -&gt; UIView?</code></li>
 </ol>
-<pre><code class="swift">override func hitTest(_ point: CGPoint, with event: UIEvent?) -&gt; UIView? &#123;
+<pre><code class="swift">override func hitTest(_ point: CGPoint, with event: UIEvent?) -&gt; UIView? {
     // 将响应区域扩大 30
     // subView 为应扩大响应区域的视图
-    if subView.frame.inset(by: .init(top: -30, left: -30, bottom: -30, right: -30)).contains(point) &#123;
+    if subView.frame.inset(by: .init(top: -30, left: -30, bottom: -30, right: -30)).contains(point) {
         return subView
-    &#125;
+    }
     return super.hitTest(point, with: event)
-&#125;
+}
 </code></pre>
-<h4 id="根据触摸实时修改-view-位置"><a href="#根据触摸实时修改-view-位置" class="headerlink" title="根据触摸实时修改 view 位置"></a>根据触摸实时修改 view 位置</h4><pre><code class="swift">override func touchesMoved(_ touches: Set&lt;UITouch&gt;, with event: UIEvent?) &#123;
+<h4 id="根据触摸实时修改-view-位置"><a href="#根据触摸实时修改-view-位置" class="headerlink" title="根据触摸实时修改 view 位置"></a>根据触摸实时修改 view 位置</h4><pre><code class="swift">override func touchesMoved(_ touches: Set&lt;UITouch&gt;, with event: UIEvent?) {
     let touch = touches.randomElement()
     let prePoint = touch?.precisePreviousLocation(in: self)
     let currPoint = touch?.location(in: self)
-    if let prePoint = prePoint, let currPoint = currPoint &#123;
+    if let prePoint = prePoint, let currPoint = currPoint {
         let offsetX = currPoint.x - prePoint.x
         let offsetY = currPoint.y - prePoint.y
         self.transform = self.transform.translatedBy(x: offsetX, y: offsetY)
-    &#125;
-&#125;
+    }
+}
 </code></pre>
 <h2 id="🔗"><a href="#🔗" class="headerlink" title="🔗"></a>🔗</h2><p><a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/uikit/touches_presses_and_gestures/using_responders_and_the_responder_chain_to_handle_events">Using Responders and the Responder Chain to Handle Events</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c294d1bd963d">iOS 触摸事件全家桶</a></p>

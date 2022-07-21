@@ -377,10 +377,10 @@ a:hover {
 
 code {
   background-color: whitesmoke;
-  color: #da1039;
-  font-size: 0.875em;
+  color: #333333;
+  font-size: 85%;
   font-weight: normal;
-  padding: 0.25em 0.5em 0.25em;
+  padding: 0.2em 0.4em;
 }
 
 hr {
