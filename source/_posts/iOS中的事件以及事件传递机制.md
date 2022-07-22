@@ -16,6 +16,7 @@ iOS 中有 8 种事件，本文重点介绍触摸事件的传递机制与响应�
 * ```hitTest``` 方法的作用，它有什么实践场景？
 * ```UIControl``` 与 ```UIGestureRecognizer``` 也能响应触摸事件，```UIResponder``` 的响应方式有什么不同？
 <!-- more -->
+
 ## 响应者 & 响应者链
 
 * 响应者即 ```UIResponder class``` 的一个实例；
