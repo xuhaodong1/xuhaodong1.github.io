@@ -51,6 +51,7 @@
   display: block;
   margin: 0 auto;
   max-height: 500px;
+  margin-bottom: 2em;
   border-radius: 6px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
   opacity: 0;
