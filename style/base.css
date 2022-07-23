@@ -134,6 +134,7 @@
   margin: 0 30px;
   padding: 20px 0;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 0.8em;
 }
 :root body > footer .sns-container .iconfont {
   margin: 0 5px;
