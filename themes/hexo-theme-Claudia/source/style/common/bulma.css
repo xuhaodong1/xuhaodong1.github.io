@@ -1931,7 +1931,7 @@ fieldset[disabled] .button {
 }
 
 .content h1:not(:first-child) {
-  margin-top: 1em;
+  margin-top: 0.025em;
 }
 
 .content h2 {
@@ -1940,7 +1940,7 @@ fieldset[disabled] .button {
 }
 
 .content h2:not(:first-child) {
-  margin-top: 1.1428em;
+  margin-top: 0.025em;
 }
 
 .content h3 {
@@ -1949,7 +1949,7 @@ fieldset[disabled] .button {
 }
 
 .content h3:not(:first-child) {
-  margin-top: 1.3333em;
+  margin-top: 0.025em;
 }
 
 .content h4 {
