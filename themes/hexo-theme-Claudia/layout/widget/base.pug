@@ -53,6 +53,11 @@ html(lang=config.language class= `appearance-${ appearance }`)
     footer.is-flex.is-flex-direction-column.is-align-items-center.is-flex-shrink-0.is-family-serif
       section.sns-container
         include widget-sns
+      p 
+        span PV:
+        span(id=id="busuanzi_value_site_pv")
+        span   UV: 
+        span(id=id="busuanzi_value_site_uv")
       p
         span Copyright ©
         - var author = (theme.user && theme.user.name) || config.author || ''
@@ -65,7 +70,7 @@ html(lang=config.language class= `appearance-${ appearance }`)
           a(title="github-button" class="github-button" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true")
       div
         span!= theme.user && theme.user.footnotes
-
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     script(async defer src="https://buttons.github.io/buttons.js")
     block script
 
