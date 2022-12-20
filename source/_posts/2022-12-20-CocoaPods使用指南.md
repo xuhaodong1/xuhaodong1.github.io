@@ -70,7 +70,7 @@ install! 'cocoapods',
 * ```:incremental_installation```：仅对自上次安装的 target 与其关联的 project 的变更部分进行重新生成，默认为 false。
 * ```:skip_pods_project_generation```：是否跳过生成 Pods.xcodeproj 并仅进行依赖项解析与下载，默认为 false。
 
-**```ensure_bundler!```**：当 bundler 版本不匹配时发出警告。
+**`ensure_bundler`**!：当 bundler 版本不匹配时发出警告。
 
 ```ruby
 ensure_bundler! '~> 2.0.0'
@@ -78,7 +78,7 @@ ensure_bundler! '~> 2.0.0'
 
 ### Dependencies
 
-**```pod```**：指定项目的依赖项
+**pod**：指定项目的依赖项
 
 * 依赖版本控制：=、>、>=、<、<= 为字面意思；~> 0.1.2 表示 0.1.2 <= currVersion < 0.2 之间的符合要求的最新版本版本。
 * Build configurations：默认依赖安装在所有的构建配置中，但也可仅在指定构建配置中启用。
@@ -112,7 +112,7 @@ pod 'AFNetworking', :git => 'https://github.com/gowalla/AFNetworking.git', :comm
 pod 'JSONKit', :podspec => 'https://example.com/JSONKit.podspec'
 ```
 
-**```inherit!```**：设置当前 target 的继承模式。
+**inherit**：设置当前 target 的继承模式。
 
 ```:complete``` 继承父级 target 的所有行为，```:none``` 不继承父级 target 的任何行为，```:search_paths``` 仅继承父级的搜索路径。
 
@@ -124,7 +124,7 @@ target 'App' do
 end
 ```
 
-**```target```**：与 Xcode 中的 target 相对应，block 中是 target 的依赖项。
+**target**：与 Xcode 中的 target 相对应，block 中是 target 的依赖项。
 
 默认情况下，target 包含在父级 target 定义的依赖项，也即 ```inherit!``` 为 ```:complete```。关于 ```:complete``` 和 ```:search_paths```，```:complete``` 会拷贝父级 target 的 pod 副本，而 ```:search_paths``` 则只进行 `FRAMEWORK_SEARCH_PATHS` 和 `HEADER_SEARCH_PATHS` 的相关拷贝，具体可通过比对 Pods/Target Support Files 的相关文件得以验证，一般在 ```UnitTests``` 中使用，以减少多余的 ```install_framework``` 过程。
 
@@ -145,7 +145,7 @@ target 'ShowsApp' do
 end
 ```
 
-**```abstract_target```**：定义 ```abstract_target```，方便 target 进行依赖继承，在 CocoaPods 1.0 版本之前为 ```link_with```。
+**abstract_target**：定义 ```abstract_target```，方便 target 进行依赖继承，在 CocoaPods 1.0 版本之前为 ```link_with```。
 
 ```ruby
 abstract_target 'Networking' do
@@ -156,9 +156,9 @@ abstract_target 'Networking' do
 end
 ```
 
-**```abstract!```**：表示当前 target 是抽象的，不会链接到 Xcode 的 target 中。
+**abstract**：表示当前 target 是抽象的，不会链接到 Xcode 的 target 中。
 
-**```script_phase```**：添加脚本阶段。
+**script_phase**：添加脚本阶段。
 
 在执行完 ```pod install``` 之后 CocoaPods 会将脚本添加到对应的 ```target build phases```。
 
@@ -177,7 +177,7 @@ end
 
 ### Target configuration
 
-**```platform```**：指定其构建平台。
+**platform**：指定其构建平台。
 
 默认值为 iOS 4.3、OSX 10.6、tvOS 9.0 和 watchOS 2.0。CocoaPods 1.0 之前的版本为 xcodeproj
 
@@ -185,7 +185,7 @@ end
 platform :ios, '4.0'
 ```
 
-**```project```**：指定包含 target 的 Xcode project。这一般在 workspace 存在多个 xcode project 中使用：
+**project**：指定包含 target 的 Xcode project。这一般在 workspace 存在多个 xcode project 中使用：
 
 ```ruby
 # 在 FastGPS Project 中可以找到一个名为 MyGPSApp 的 target
@@ -195,7 +195,7 @@ target 'MyGPSApp' do
 end
 ```
 
-**```inhibit_all_warnings```**!：禁止所有警告。
+**inhibit_all_warnings**!：禁止所有警告。
 
 如果针对单个 Pod，则可以采用：
 
@@ -204,7 +204,7 @@ pod 'SSZipArchive', :inhibit_warnings => true
 pod 'SSZipArchive', :inhibit_warnings => true
 ```
 
-**```user_modular_headers```**!：将所有 Pod 模块化。
+**user_modular_headers**!：将所有 Pod 模块化。
 
 如果针对单个 Pod，则可以采用：
 
@@ -213,7 +213,7 @@ pod 'SSZipArchive', :modular_headers => true
 pod 'SSZipArchive', :modular_headers => false
 ```
 
-**```user_frameworks```**!：采用 framework 而不是 .a 文件的静态库。
+**user_frameworks**!：采用 framework 而不是 .a 文件的静态库。
 
 可以通过 ```:linkage``` 指定使用静态库还是动态库：
 
@@ -221,7 +221,7 @@ pod 'SSZipArchive', :modular_headers => false
 use_frameworks！:linkage => :dynamic / :static
 ```
 
-**```supports_swift_versions```**：指定 target definition 支持的 swift 版本要求
+**supports_swift_versions**：指定 target definition 支持的 swift 版本要求
 
 ```ruby
 supports_swift_versions '>= 3.0', '< 4.0'
@@ -229,7 +229,7 @@ supports_swift_versions '>= 3.0', '< 4.0'
 
 ### Workspace
 
-**```workspace```**：指定包含所有项目的 Xcode workspace。
+**workspace**：指定包含所有项目的 Xcode workspace。
 
 ```ruby
 workspace 'MyWorkspace'
@@ -237,7 +237,7 @@ workspace 'MyWorkspace'
 
 ### Sources
 
-**```sources```**：Podfile 从指定的源列表中进行检索。sources 默认存储在 ~/.cocoapods/repos 中，是全局的而非按 target definition 存储。当有多个相同的 Pod 时，优先采用检索到的 Pod 的第一个源，因此当指定另一个来源时，则需显示指定 CocoaPods 的源。
+**sources**：Podfile 从指定的源列表中进行检索。sources 默认存储在 ~/.cocoapods/repos 中，是全局的而非按 target definition 存储。当有多个相同的 Pod 时，优先采用检索到的 Pod 的第一个源，因此当指定另一个来源时，则需显示指定 CocoaPods 的源。
 
 ```ruby
 source 'https://github.com/artsy/Specs.git'
@@ -246,14 +246,14 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 ### Hooks
 
-**```plugin```**：指定在安装期间使用的插件。
+**plugin**：指定在安装期间使用的插件。
 
 ```ruby
 plugin 'cocoapods-keys', :keyring => 'Eidolon'
 plugin 'slather'
 ```
 
-**```pre_install```**：在下载后和在安装 Pod 前进行更改。
+**pre_install**：在下载后和在安装 Pod 前进行更改。
 
 ```ruby
 pre_install do |installer|
@@ -261,7 +261,7 @@ pre_install do |installer|
 end
 ```
 
-**```pre_integrate```**：在 project 写入磁盘前进行更改。
+**pre_integrate**：在 project 写入磁盘前进行更改。
 
 ```ruby
 pre_integrate do |installer|
@@ -269,7 +269,7 @@ pre_integrate do |installer|
 end
 ```
 
-**```post_install```**：对生成 project 写入磁盘前进行最后的修改。
+**post_install**：对生成 project 写入磁盘前进行最后的修改。
 
 ```ruby
 post_install do |installer|
@@ -281,7 +281,7 @@ post_install do |installer|
 end
 ```
 
-**```post_integrate```**：在 project 写入磁盘后进行最后更改。
+**post_integrate**：在 project 写入磁盘后进行最后更改。
 
 ```ruby
 post_integrate do |installer|
@@ -336,13 +336,13 @@ end
 
 ### Platform
 
-**```platform```**：pod 支持的平台，留空意味着 pod 支持所有平台。当支持多平台时应该用 ```deployment_target``` 代替。
+**platform**：pod 支持的平台，留空意味着 pod 支持所有平台。当支持多平台时应该用 ```deployment_target``` 代替。
 
 ```ruby
 spec.platform = :osx, '10.8'
 ```
 
-**```deployment_target```**：允许指定支持此 pod 的多个平台，为每个平台指定不同的部署目标。
+**deployment_target**：允许指定支持此 pod 的多个平台，为每个平台指定不同的部署目标。
 
 ```ruby
 spec.ios.deployment_target = '6.0'
@@ -351,13 +351,13 @@ spec.osx.deployment_target = '10.8'
 
 ### Build settings
 
-**```dependency```**：基于其他 pods 或子规范的依赖
+**dependency**：基于其他 pods 或子规范的依赖
 
 ```ruby
 spec.dependency 'AFNetworking', '~> 1.0', :configurations => ['Debug']
 ```
 
-**```info_plist```**：加入到生成的 Info.plist 的键值对，会对 CocoaPods 生成的默认值进行覆盖。仅对使用 framework 的框架有影响，对静态库无效。对于应用规范，这些值将合并到应用程序主机的 ```Info.plist```；对于测试规范，这些值将合并到测试包的 Info.plist。
+**info_plist**：加入到生成的 Info.plist 的键值对，会对 CocoaPods 生成的默认值进行覆盖。仅对使用 framework 的框架有影响，对静态库无效。对于应用规范，这些值将合并到应用程序主机的 ```Info.plist```；对于测试规范，这些值将合并到测试包的 Info.plist。
 
 ```ruby
 spec.info_plist = {
@@ -366,7 +366,7 @@ spec.info_plist = {
 }
 ```
 
-**```requires_arc```**：允许指定哪些 source_files 采用 ARC，不使用 ARC 的文件将具有 ```-fno-objc-arc``` 编译器标志
+**requires_arc**：允许指定哪些 source_files 采用 ARC，不使用 ARC 的文件将具有 ```-fno-objc-arc``` 编译器标志
 
 ```ruby
 spec.requires_arc = false
@@ -374,77 +374,77 @@ spec.requires_arc = 'Classes/Arc'
 spec.requires_arc = ['Classes/*ARC.m', 'Classes/ARC.mm']
 ```
 
-**```frameworks```**：使用者 target 需要链接的系统框架列表
+**frameworks**：使用者 target 需要链接的系统框架列表
 
 ```ruby
 spec.ios.framework = 'CFNetwork'
 spec.frameworks = 'QuartzCore', 'CoreData'
 ```
 
-**```weak_frameworks```**：使用者 target 需要弱链接的框架列表
+**weak_frameworks**：使用者 target 需要弱链接的框架列表
 
 ```swift
 spec.weak_framework = 'Twitter'
 spec.weak_frameworks = 'Twitter', 'SafariServices'
 ```
 
-**```libraries```**：使用者 target 需要链接的系统库列表
+**libraries**：使用者 target 需要链接的系统库列表
 
 ```ruby
 spec.ios.library = 'xml2'
 spec.libraries = 'xml2', 'z'
 ```
 
-**```compiler_flags```**：应传递给编译器的 flags
+**compiler_flags**：应传递给编译器的 flags
 
 ```ruby
 spec.compiler_flags = '-DOS_OBJECT_USE_OBJC=0', '-Wno-format'
 ```
 
-**```pod_target_xcconfig```**：将指定 flag 添加到最终 pod 的 xcconfig 文件
+**pod_target_xcconfig**：将指定 flag 添加到最终 pod 的 xcconfig 文件
 
 ```ruby
 spec.pod_target_xcconfig = { 'OTHER_LDFLAGS' => '-lObjC' }
 ```
 
-**```user_target_xcconfig```**：🙅 将指定 flag 添加到最终聚合的 target 的 xcconfig，不推荐使用此属性，因为会污染用户的构建设置，可能会导致冲突。
+**user_target_xcconfig**：🙅 将指定 flag 添加到最终聚合的 target 的 xcconfig，不推荐使用此属性，因为会污染用户的构建设置，可能会导致冲突。
 
 ```ruby
 spec.user_target_xcconfig = { 'MY_SUBSPEC' => 'YES' }
 ```
 
-**```prefix_header_contents```**：🙅 在 Pod 中注入的预编译内容，不推荐使用此属性，因为其会污染用户或者其他库的预编译头。
+**prefix_header_contents**：🙅 在 Pod 中注入的预编译内容，不推荐使用此属性，因为其会污染用户或者其他库的预编译头。
 
 ```ruby
 spec.prefix_header_contents = '#import <UIKit/UIKit.h>', '#import <Foundation/Foundation.h>'
 ```
 
-**```prefix_header_file```**：预编译头文件，false 表示不生成默认的 CocoaPods 的与编译头文件。🙅 不推荐使用路径形式，因为其会污染用户或者其他库的预编译头。
+**prefix_header_file**：预编译头文件，false 表示不生成默认的 CocoaPods 的与编译头文件。🙅 不推荐使用路径形式，因为其会污染用户或者其他库的预编译头。
 
 ```ruby
 spec.prefix_header_file = 'iphone/include/prefix.pch'
 spec.prefix_header_file = false
 ```
 
-**```module_name```**：生成的 framrwork / clang module 使用的名称，而非默认名称。
+**module_name**：生成的 framrwork / clang module 使用的名称，而非默认名称。
 
 ```ruby
 spec.module_name = 'Three20'
 ```
 
-**```header_dir```**：存储头文件的目录，这样它们就不会被破坏。
+**header_dir**：存储头文件的目录，这样它们就不会被破坏。
 
 ```ruby
 spec.header_dir = 'Three20Core'
 ```
 
-**```header_mappings_dir```**：用于保留头文件文件夹的目录。如未提供，头文件将被碾平。
+**header_mappings_dir**：用于保留头文件文件夹的目录。如未提供，头文件将被碾平。
 
 ```ruby
 spec.header_mappings_dir = 'src/include'
 ```
 
-**```script_phases```**：该属性允许定义脚本在 pod 编译时执行，其作为 ```xcode build``` 命令的一部分执行，还可以利用编译期间所设置的环境变量。
+**script_phases**：该属性允许定义脚本在 pod 编译时执行，其作为 ```xcode build``` 命令的一部分执行，还可以利用编译期间所设置的环境变量。
 
 ```ruby
 spec.script_phases = [
@@ -457,45 +457,45 @@ spec.script_phases = [
 
 文件模式指定了库的所有文件管理方式，如源代码、头文件、framework、libaries、以及各种资源。其文件模式通配符形式可参考 [LINK](https://guides.cocoapods.org/syntax/podspec.html#group_file_patterns)。
 
-**```source_files```**：指定源文件
+**source_files**：指定源文件
 
 ```ruby
 spec.source_files = 'Classes/**/*.{h,m}', 'More_Classes/**/*.{h,m}'
 ```
 
-**```public_header_files```**：指定公共头文件，这些头文件与源文件匹配，并生成文档向用户提供。如果未指定，则将 source_files 中的所有头文件都包含生成。
+**public_header_files**：指定公共头文件，这些头文件与源文件匹配，并生成文档向用户提供。如果未指定，则将 source_files 中的所有头文件都包含生成。
 
 ```ruby
 spec.public_header_files = 'Headers/Public/*.h'
 ```
 
-**```project_header_files```**：指定项目头文件，与公共头文件相对应，以排除不应向用户项目公开且不应用于生成文档的标头，且不会出现在构建目录中。
+**project_header_files**：指定项目头文件，与公共头文件相对应，以排除不应向用户项目公开且不应用于生成文档的标头，且不会出现在构建目录中。
 
 ```ruby
 spec.project_header_files = 'Headers/Project/*.h'
 ```
 
-**```private_header_files```**：私有头文件，与公共头文件对应，以排除不应向用户项目公开且不应用于生成文档的标头，这些头文件会出现在产物中的 PrivateHeader 文件夹中。
+**private_header_files**：私有头文件，与公共头文件对应，以排除不应向用户项目公开且不应用于生成文档的标头，这些头文件会出现在产物中的 PrivateHeader 文件夹中。
 
 ```ruby
 spec.private_header_files = 'Headers/Private/*.h'
 ```
 
-**```vendered_frameworks```**：pod 附加的 framework 路径
+**vendered_frameworks**：pod 附加的 framework 路径
 
 ```ruby
 spec.ios.vendored_frameworks = 'Frameworks/MyFramework.framework'
 spec.vendored_frameworks = 'MyFramework.framework', 'TheirFramework.xcframework'	
 ```
 
-**```vendered_libraries```**：pod 附加的 libraries 路径
+**vendered_libraries**：pod 附加的 libraries 路径
 
 ```ruby
 spec.ios.vendored_library = 'Libraries/libProj4.a'
 spec.vendored_libraries = 'libProj4.a', 'libJavaScriptCore.a'
 ```
 
-**```on_demand_resources```**：根据 [Introducing On demand Resources](https://developer.apple.com/videos/play/wwdc2015/214/) 按需加载资源，不推荐与主工程共享标签，默认类别为 ```category => :download_on_demand```
+**on_demand_resources**：根据 [Introducing On demand Resources](https://developer.apple.com/videos/play/wwdc2015/214/) 按需加载资源，不推荐与主工程共享标签，默认类别为 ```category => :download_on_demand```
 
 ```ruby
 s.on_demand_resources = {
@@ -506,7 +506,7 @@ s.on_demand_resources = {
 }
 ```
 
-**```resources```**：为 pod 构建的 bundle 的名称和资源文件，其中 key 为 bundle 名称，值代表它们应用的文件模式。
+**resources**：为 pod 构建的 bundle 的名称和资源文件，其中 key 为 bundle 名称，值代表它们应用的文件模式。
 
 ```ruby
 spec.resource_bundles = {
@@ -515,21 +515,21 @@ spec.resource_bundles = {
 }
 ```
 
-**```exclude_files```**：排除的文件模式列表
+**exclude_files**：排除的文件模式列表
 
 ```ruby
 spec.ios.exclude_files = 'Classes/osx'
 spec.exclude_files = 'Classes/**/unused.{h,m}'
 ```
 
-**```preserve_paths```**：下载后不应删除的文件。默认情况下，CocoaPods 会删除与其他文件模式不匹配的所有文件
+**preserve_paths**：下载后不应删除的文件。默认情况下，CocoaPods 会删除与其他文件模式不匹配的所有文件
 
 ```ruby
 spec.preserve_path = 'IMPORTANT.txt'
 spec.preserve_paths = 'Frameworks/*.framework'
 ```
 
-**```module_map```**：pod 继承为 framework 时使用的模块映射文件，默认为 true，CocoaPods 根据 公共头文件创建 module_map 文件。
+**module_map**：pod 继承为 framework 时使用的模块映射文件，默认为 true，CocoaPods 根据 公共头文件创建 module_map 文件。
 
 ```ruby
 spec.module_map = 'source/module.modulemap'
@@ -538,7 +538,7 @@ spec.module_map = false
 
 ### Subspecs
 
-**```subspec```**：子模块的规范；实行双重继承：specs 自动继承所有 subspec 作为依赖项(除非指定默认 spec)；subspec 继承了父级的属性；
+**subspec**：子模块的规范；实行双重继承：specs 自动继承所有 subspec 作为依赖项(除非指定默认 spec)；subspec 继承了父级的属性；
 
 ```ruby
 # 采用不同源文件的 Specs, CocoaPods 自动处理重复引用问题
@@ -581,7 +581,7 @@ Pod::Spec.new do |s|
 end
 ```
 
-**```default_subspecs```**：默认子规范数组名称，不指定将全部子规范作为默认子规范，```:none``` 表示不需要任何子规范。
+**default_subspecs**：默认子规范数组名称，不指定将全部子规范作为默认子规范，```:none``` 表示不需要任何子规范。
 
 ```ruby
 spec.default_subspec = 'Core'
@@ -589,20 +589,20 @@ spec.default_subspecs = 'Core', 'UI'
 spec.default_subspecs = :none	
 ```
 
-**```scheme```**：用以给指定 scheme configuration 添加拓展
+**scheme**：用以给指定 scheme configuration 添加拓展
 
 ```ruby
 spec.scheme = { :launch_arguments => ['Arg1'] }
 spec.scheme = { :launch_arguments => ['Arg1', 'Arg2'], :environment_variables => { 'Key1' => 'Val1'} }
 ```
 
-**```test_spec```**：测试规范，在 1.8 版本支持。可参考：[CocoaPods 1.8 Beta](https://blog.cocoapods.org/CocoaPods-1.8.0-beta/)
+**test_spec**：测试规范，在 1.8 版本支持。可参考：[CocoaPods 1.8 Beta](https://blog.cocoapods.org/CocoaPods-1.8.0-beta/)
 
-**```requires_app_host```**：是否需要宿主 APP 运行测试，仅适用于测试规范。
+**requires_app_host**：是否需要宿主 APP 运行测试，仅适用于测试规范。
 
-**```app_host_name```**：必要时作用于应用程序的应用程序规范名称
+**app_host_name**：必要时作用于应用程序的应用程序规范名称
 
-**```app_spec```**：宿主 APP 规范
+**app_spec**：宿主 APP 规范
 
 ```ruby
 Pod::Spec.new do |s|
