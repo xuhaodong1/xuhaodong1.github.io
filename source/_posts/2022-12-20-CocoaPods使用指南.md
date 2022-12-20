@@ -48,7 +48,7 @@ Podfile 描述了一个或多个 Xcode 项目的 target 依赖关系，它是一
 
 ### Root Options
 
-**`install`**!：指定 CocoaPods 安装 Podfile 时使用的安装方法和选项。如：
+**install!**：指定 CocoaPods 安装 Podfile 时使用的安装方法和选项。如：
 
 ```ruby
 install! 'cocoapods',
@@ -70,7 +70,7 @@ install! 'cocoapods',
 * ```:incremental_installation```：仅对自上次安装的 target 与其关联的 project 的变更部分进行重新生成，默认为 false。
 * ```:skip_pods_project_generation```：是否跳过生成 Pods.xcodeproj 并仅进行依赖项解析与下载，默认为 false。
 
-**`ensure_bundler`**!：当 bundler 版本不匹配时发出警告。
+**ensure_bundler!**：当 bundler 版本不匹配时发出警告。
 
 ```ruby
 ensure_bundler! '~> 2.0.0'
