@@ -10,7 +10,7 @@ tags:
 ## 前言
 
 对于大多数软件开发团队来说，依赖管理工具必不可少，它能针对开源和私有依赖进行安装与管理，从而提升开发效率，降低维护成本。针对不同的语言与平台，其依赖管理工具也各有不同，例如 npm 管理 Javascript、Gradle 、Maven 管理 Jar 包、pip 管理 Python 包，Bundler、RubyGems 等等。本文聚焦于 iOS 方面，对 CocoaPods 的使用和部分原理进行阐述。
-
+<!-- more -->
 ## 简单易用的 CocoaPods
 
 对于 iOSer 来说，CocoaPods 并不陌生，几乎所有的 iOS 工程都会有它的身影。CocoaPods 采用 Ruby 构建，它是 Swift 和 Objective-C Cocoa 项目的依赖管理工具。在 MacOS 上，推荐使用默认的 Ruby 进行安装 (以下操作均在 CocoaPods 1.10.1、Ruby 2.7.2 进行)：
