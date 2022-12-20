@@ -59,7 +59,7 @@ let foo = Foo()
 print(MemoryLayout&lt;Foo&gt;.size)
 print("===end===")
 </code></pre>
-<img src="/images/blog/image-20220311002137424-6929301.png" alt="image-20211226103015351" style="zoom: 67%;">
+<img src="/images/blog/截屏2021-12-26 10.27.40.png" alt="image-20211226103015351" style="zoom: 67%;">
 
 <p>可以看出，<strong>struct</strong> 的内存是连续分布的，但是由于<strong>内存对齐原则</strong>，属性 <strong>a</strong> 所占用内存空间为 <strong>2 byte</strong>，对于实例方法其内部并不会做存储，而是在编译后直接指向方法的地址。</p>
 <h3 id="class"><a href="#class" class="headerlink" title="class"></a><strong>class</strong></h3><p><strong>Swift</strong> 与 <strong>Objective-C</strong> 中的 <strong>Class</strong> 类型，为了兼容 <strong>Objective-C</strong> 且具有更多的 <strong>Swift</strong> 特性，在 <strong>Swift</strong> 源码中，其类型为 <code>swift_class_t</code> 的结构体，继承于 <code>objc_class</code>。其内存布局如下图所示：</p>
