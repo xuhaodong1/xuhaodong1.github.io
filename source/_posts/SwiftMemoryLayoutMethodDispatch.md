@@ -67,7 +67,7 @@ print(MemoryLayout<Foo>.size)
 print("===end===")
 ```
 
-<img src="/images/blog/image-20220311002137424-6929301.png" alt="image-20211226103015351" style="zoom: 67%;" />
+<img src="/images/blog/截屏2021-12-26 10.27.40.png" alt="image-20211226103015351" style="zoom: 67%;" />
 
 可以看出，**struct** 的内存是连续分布的，但是由于**内存对齐原则**，属性 **a** 所占用内存空间为 **2 byte**，对于实例方法其内部并不会做存储，而是在编译后直接指向方法的地址。
 
