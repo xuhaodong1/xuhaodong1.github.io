@@ -50,10 +50,10 @@
 <li><code>:incremental_installation</code>：仅对自上次安装的 target 与其关联的 project 的变更部分进行重新生成，默认为 false。</li>
 <li><code>:skip_pods_project_generation</code>：是否跳过生成 Pods.xcodeproj 并仅进行依赖项解析与下载，默认为 false。</li>
 </ul>
-<p>**<code>ensure_bundler!</code>**：当 bundler 版本不匹配时发出警告。</p>
+<p><strong><code>ensure_bundler</code></strong>!：当 bundler 版本不匹配时发出警告。</p>
 <pre><code class="ruby">ensure_bundler! '~&gt; 2.0.0'
 </code></pre>
-<h3 id="Dependencies"><a href="#Dependencies" class="headerlink" title="Dependencies"></a>Dependencies</h3><p>**<code>pod</code>**：指定项目的依赖项</p>
+<h3 id="Dependencies"><a href="#Dependencies" class="headerlink" title="Dependencies"></a>Dependencies</h3><p><strong>pod</strong>：指定项目的依赖项</p>
 <ul>
 <li>依赖版本控制：=、&gt;、&gt;=、&lt;、&lt;= 为字面意思；~&gt; 0.1.2 表示 0.1.2 &lt;= currVersion &lt; 0.2 之间的符合要求的最新版本版本。</li>
 <li>Build configurations：默认依赖安装在所有的构建配置中，但也可仅在指定构建配置中启用。</li>
@@ -85,7 +85,7 @@ pod 'AFNetworking', :git =&gt; 'https://github.com/gowalla/AFNetworking.git', :c
 # 指定某个 podspec
 pod 'JSONKit', :podspec =&gt; 'https://example.com/JSONKit.podspec'
 </code></pre>
-<p>**<code>inherit!</code>**：设置当前 target 的继承模式。</p>
+<p><strong>inherit</strong>：设置当前 target 的继承模式。</p>
 <p><code>:complete</code> 继承父级 target 的所有行为，<code>:none</code> 不继承父级 target 的任何行为，<code>:search_paths</code> 仅继承父级的搜索路径。</p>
 <pre><code class="ruby">target 'App' do
   target 'AppTests' do
@@ -93,7 +93,7 @@ pod 'JSONKit', :podspec =&gt; 'https://example.com/JSONKit.podspec'
   end
 end
 </code></pre>
-<p>**<code>target</code>**：与 Xcode 中的 target 相对应，block 中是 target 的依赖项。</p>
+<p><strong>target</strong>：与 Xcode 中的 target 相对应，block 中是 target 的依赖项。</p>
 <p>默认情况下，target 包含在父级 target 定义的依赖项，也即 <code>inherit!</code> 为 <code>:complete</code>。关于 <code>:complete</code> 和 <code>:search_paths</code>，<code>:complete</code> 会拷贝父级 target 的 pod 副本，而 <code>:search_paths</code> 则只进行 <code>FRAMEWORK_SEARCH_PATHS</code> 和 <code>HEADER_SEARCH_PATHS</code> 的相关拷贝，具体可通过比对 Pods/Target Support Files 的相关文件得以验证，一般在 <code>UnitTests</code> 中使用，以减少多余的 <code>install_framework</code> 过程。</p>
 <pre><code class="ruby">target 'ShowsApp' do
   pod 'ShowsKit'
@@ -110,7 +110,7 @@ end
   end
 end
 </code></pre>
-<p>**<code>abstract_target</code>**：定义 <code>abstract_target</code>，方便 target 进行依赖继承，在 CocoaPods 1.0 版本之前为 <code>link_with</code>。</p>
+<p><strong>abstract_target</strong>：定义 <code>abstract_target</code>，方便 target 进行依赖继承，在 CocoaPods 1.0 版本之前为 <code>link_with</code>。</p>
 <pre><code class="ruby">abstract_target 'Networking' do
   pod 'AlamoFire'
 
@@ -118,8 +118,8 @@ end
   target 'Networking App 2'
 end
 </code></pre>
-<p>**<code>abstract!</code>**：表示当前 target 是抽象的，不会链接到 Xcode 的 target 中。</p>
-<p>**<code>script_phase</code>**：添加脚本阶段。</p>
+<p><strong>abstract</strong>：表示当前 target 是抽象的，不会链接到 Xcode 的 target 中。</p>
+<p><strong>script_phase</strong>：添加脚本阶段。</p>
 <p>在执行完 <code>pod install</code> 之后 CocoaPods 会将脚本添加到对应的 <code>target build phases</code>。</p>
 <pre><code class="ruby">target 'App' do
     script_phase {
@@ -132,56 +132,56 @@ end
     }
 end
 </code></pre>
-<h3 id="Target-configuration"><a href="#Target-configuration" class="headerlink" title="Target configuration"></a>Target configuration</h3><p>**<code>platform</code>**：指定其构建平台。</p>
+<h3 id="Target-configuration"><a href="#Target-configuration" class="headerlink" title="Target configuration"></a>Target configuration</h3><p><strong>platform</strong>：指定其构建平台。</p>
 <p>默认值为 iOS 4.3、OSX 10.6、tvOS 9.0 和 watchOS 2.0。CocoaPods 1.0 之前的版本为 xcodeproj</p>
 <pre><code class="ruby">platform :ios, '4.0'
 </code></pre>
-<p>**<code>project</code>**：指定包含 target 的 Xcode project。这一般在 workspace 存在多个 xcode project 中使用：</p>
+<p><strong>project</strong>：指定包含 target 的 Xcode project。这一般在 workspace 存在多个 xcode project 中使用：</p>
 <pre><code class="ruby"># 在 FastGPS Project 中可以找到一个名为 MyGPSApp 的 target
 target 'MyGPSApp' do
   project 'FastGPS'
   ...
 end
 </code></pre>
-<p><strong><code>inhibit_all_warnings</code></strong>!：禁止所有警告。</p>
+<p><strong>inhibit_all_warnings</strong>!：禁止所有警告。</p>
 <p>如果针对单个 Pod，则可以采用：</p>
 <pre><code class="ruby">pod 'SSZipArchive', :inhibit_warnings =&gt; true
 pod 'SSZipArchive', :inhibit_warnings =&gt; true
 </code></pre>
-<p><strong><code>user_modular_headers</code></strong>!：将所有 Pod 模块化。</p>
+<p><strong>user_modular_headers</strong>!：将所有 Pod 模块化。</p>
 <p>如果针对单个 Pod，则可以采用：</p>
 <pre><code class="ruby">pod 'SSZipArchive', :modular_headers =&gt; true
 pod 'SSZipArchive', :modular_headers =&gt; false
 </code></pre>
-<p><strong><code>user_frameworks</code></strong>!：采用 framework 而不是 .a 文件的静态库。</p>
+<p><strong>user_frameworks</strong>!：采用 framework 而不是 .a 文件的静态库。</p>
 <p>可以通过 <code>:linkage</code> 指定使用静态库还是动态库：</p>
 <pre><code class="ruby">use_frameworks！:linkage =&gt; :dynamic / :static
 </code></pre>
-<p>**<code>supports_swift_versions</code>**：指定 target definition 支持的 swift 版本要求</p>
+<p><strong>supports_swift_versions</strong>：指定 target definition 支持的 swift 版本要求</p>
 <pre><code class="ruby">supports_swift_versions '&gt;= 3.0', '&lt; 4.0'
 </code></pre>
-<h3 id="Workspace"><a href="#Workspace" class="headerlink" title="Workspace"></a>Workspace</h3><p>**<code>workspace</code>**：指定包含所有项目的 Xcode workspace。</p>
+<h3 id="Workspace"><a href="#Workspace" class="headerlink" title="Workspace"></a>Workspace</h3><p><strong>workspace</strong>：指定包含所有项目的 Xcode workspace。</p>
 <pre><code class="ruby">workspace 'MyWorkspace'
 </code></pre>
-<h3 id="Sources"><a href="#Sources" class="headerlink" title="Sources"></a>Sources</h3><p>**<code>sources</code>**：Podfile 从指定的源列表中进行检索。sources 默认存储在 ~/.cocoapods/repos 中，是全局的而非按 target definition 存储。当有多个相同的 Pod 时，优先采用检索到的 Pod 的第一个源，因此当指定另一个来源时，则需显示指定 CocoaPods 的源。</p>
+<h3 id="Sources"><a href="#Sources" class="headerlink" title="Sources"></a>Sources</h3><p><strong>sources</strong>：Podfile 从指定的源列表中进行检索。sources 默认存储在 ~/.cocoapods/repos 中，是全局的而非按 target definition 存储。当有多个相同的 Pod 时，优先采用检索到的 Pod 的第一个源，因此当指定另一个来源时，则需显示指定 CocoaPods 的源。</p>
 <pre><code class="ruby">source 'https://github.com/artsy/Specs.git'
 source 'https://github.com/CocoaPods/Specs.git'
 </code></pre>
-<h3 id="Hooks"><a href="#Hooks" class="headerlink" title="Hooks"></a>Hooks</h3><p>**<code>plugin</code>**：指定在安装期间使用的插件。</p>
+<h3 id="Hooks"><a href="#Hooks" class="headerlink" title="Hooks"></a>Hooks</h3><p><strong>plugin</strong>：指定在安装期间使用的插件。</p>
 <pre><code class="ruby">plugin 'cocoapods-keys', :keyring =&gt; 'Eidolon'
 plugin 'slather'
 </code></pre>
-<p>**<code>pre_install</code>**：在下载后和在安装 Pod 前进行更改。</p>
+<p><strong>pre_install</strong>：在下载后和在安装 Pod 前进行更改。</p>
 <pre><code class="ruby">pre_install do |installer|
   # Do something fancy!
 end
 </code></pre>
-<p>**<code>pre_integrate</code>**：在 project 写入磁盘前进行更改。</p>
+<p><strong>pre_integrate</strong>：在 project 写入磁盘前进行更改。</p>
 <pre><code class="ruby">pre_integrate do |installer|
   # perform some changes on dependencies
 end
 </code></pre>
-<p>**<code>post_install</code>**：对生成 project 写入磁盘前进行最后的修改。</p>
+<p><strong>post_install</strong>：对生成 project 写入磁盘前进行最后的修改。</p>
 <pre><code class="ruby">post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
@@ -190,7 +190,7 @@ end
   end
 end
 </code></pre>
-<p>**<code>post_integrate</code>**：在 project 写入磁盘后进行最后更改。</p>
+<p><strong>post_integrate</strong>：在 project 写入磁盘后进行最后更改。</p>
 <pre><code class="ruby">post_integrate do |installer|
   # some change after project write to disk
 end
@@ -291,92 +291,92 @@ end
   s.deprecated_in_favor_of  =  'NewMoreAwesomePod'
 end
 </code></pre>
-<h3 id="Platform"><a href="#Platform" class="headerlink" title="Platform"></a>Platform</h3><p>**<code>platform</code>**：pod 支持的平台，留空意味着 pod 支持所有平台。当支持多平台时应该用 <code>deployment_target</code> 代替。</p>
+<h3 id="Platform"><a href="#Platform" class="headerlink" title="Platform"></a>Platform</h3><p><strong>platform</strong>：pod 支持的平台，留空意味着 pod 支持所有平台。当支持多平台时应该用 <code>deployment_target</code> 代替。</p>
 <pre><code class="ruby">spec.platform = :osx, '10.8'
 </code></pre>
-<p>**<code>deployment_target</code>**：允许指定支持此 pod 的多个平台，为每个平台指定不同的部署目标。</p>
+<p><strong>deployment_target</strong>：允许指定支持此 pod 的多个平台，为每个平台指定不同的部署目标。</p>
 <pre><code class="ruby">spec.ios.deployment_target = '6.0'
 spec.osx.deployment_target = '10.8'
 </code></pre>
-<h3 id="Build-settings"><a href="#Build-settings" class="headerlink" title="Build settings"></a>Build settings</h3><p>**<code>dependency</code>**：基于其他 pods 或子规范的依赖</p>
+<h3 id="Build-settings"><a href="#Build-settings" class="headerlink" title="Build settings"></a>Build settings</h3><p><strong>dependency</strong>：基于其他 pods 或子规范的依赖</p>
 <pre><code class="ruby">spec.dependency 'AFNetworking', '~&gt; 1.0', :configurations =&gt; ['Debug']
 </code></pre>
-<p>**<code>info_plist</code>**：加入到生成的 Info.plist 的键值对，会对 CocoaPods 生成的默认值进行覆盖。仅对使用 framework 的框架有影响，对静态库无效。对于应用规范，这些值将合并到应用程序主机的 <code>Info.plist</code>；对于测试规范，这些值将合并到测试包的 Info.plist。</p>
+<p><strong>info_plist</strong>：加入到生成的 Info.plist 的键值对，会对 CocoaPods 生成的默认值进行覆盖。仅对使用 framework 的框架有影响，对静态库无效。对于应用规范，这些值将合并到应用程序主机的 <code>Info.plist</code>；对于测试规范，这些值将合并到测试包的 Info.plist。</p>
 <pre><code class="ruby">spec.info_plist = {
   'CFBundleIdentifier' =&gt; 'com.myorg.MyLib',
   'MY_VAR' =&gt; 'SOME_VALUE'
 }
 </code></pre>
-<p>**<code>requires_arc</code>**：允许指定哪些 source_files 采用 ARC，不使用 ARC 的文件将具有 <code>-fno-objc-arc</code> 编译器标志</p>
+<p><strong>requires_arc</strong>：允许指定哪些 source_files 采用 ARC，不使用 ARC 的文件将具有 <code>-fno-objc-arc</code> 编译器标志</p>
 <pre><code class="ruby">spec.requires_arc = false
 spec.requires_arc = 'Classes/Arc'
 spec.requires_arc = ['Classes/*ARC.m', 'Classes/ARC.mm']
 </code></pre>
-<p>**<code>frameworks</code>**：使用者 target 需要链接的系统框架列表</p>
+<p><strong>frameworks</strong>：使用者 target 需要链接的系统框架列表</p>
 <pre><code class="ruby">spec.ios.framework = 'CFNetwork'
 spec.frameworks = 'QuartzCore', 'CoreData'
 </code></pre>
-<p>**<code>weak_frameworks</code>**：使用者 target 需要弱链接的框架列表</p>
+<p><strong>weak_frameworks</strong>：使用者 target 需要弱链接的框架列表</p>
 <pre><code class="swift">spec.weak_framework = 'Twitter'
 spec.weak_frameworks = 'Twitter', 'SafariServices'
 </code></pre>
-<p>**<code>libraries</code>**：使用者 target 需要链接的系统库列表</p>
+<p><strong>libraries</strong>：使用者 target 需要链接的系统库列表</p>
 <pre><code class="ruby">spec.ios.library = 'xml2'
 spec.libraries = 'xml2', 'z'
 </code></pre>
-<p>**<code>compiler_flags</code>**：应传递给编译器的 flags</p>
+<p><strong>compiler_flags</strong>：应传递给编译器的 flags</p>
 <pre><code class="ruby">spec.compiler_flags = '-DOS_OBJECT_USE_OBJC=0', '-Wno-format'
 </code></pre>
-<p>**<code>pod_target_xcconfig</code>**：将指定 flag 添加到最终 pod 的 xcconfig 文件</p>
+<p><strong>pod_target_xcconfig</strong>：将指定 flag 添加到最终 pod 的 xcconfig 文件</p>
 <pre><code class="ruby">spec.pod_target_xcconfig = { 'OTHER_LDFLAGS' =&gt; '-lObjC' }
 </code></pre>
-<p>**<code>user_target_xcconfig</code>**：🙅 将指定 flag 添加到最终聚合的 target 的 xcconfig，不推荐使用此属性，因为会污染用户的构建设置，可能会导致冲突。</p>
+<p><strong>user_target_xcconfig</strong>：🙅 将指定 flag 添加到最终聚合的 target 的 xcconfig，不推荐使用此属性，因为会污染用户的构建设置，可能会导致冲突。</p>
 <pre><code class="ruby">spec.user_target_xcconfig = { 'MY_SUBSPEC' =&gt; 'YES' }
 </code></pre>
-<p>**<code>prefix_header_contents</code>**：🙅 在 Pod 中注入的预编译内容，不推荐使用此属性，因为其会污染用户或者其他库的预编译头。</p>
+<p><strong>prefix_header_contents</strong>：🙅 在 Pod 中注入的预编译内容，不推荐使用此属性，因为其会污染用户或者其他库的预编译头。</p>
 <pre><code class="ruby">spec.prefix_header_contents = '#import &lt;UIKit/UIKit.h&gt;', '#import &lt;Foundation/Foundation.h&gt;'
 </code></pre>
-<p>**<code>prefix_header_file</code>**：预编译头文件，false 表示不生成默认的 CocoaPods 的与编译头文件。🙅 不推荐使用路径形式，因为其会污染用户或者其他库的预编译头。</p>
+<p><strong>prefix_header_file</strong>：预编译头文件，false 表示不生成默认的 CocoaPods 的与编译头文件。🙅 不推荐使用路径形式，因为其会污染用户或者其他库的预编译头。</p>
 <pre><code class="ruby">spec.prefix_header_file = 'iphone/include/prefix.pch'
 spec.prefix_header_file = false
 </code></pre>
-<p>**<code>module_name</code>**：生成的 framrwork / clang module 使用的名称，而非默认名称。</p>
+<p><strong>module_name</strong>：生成的 framrwork / clang module 使用的名称，而非默认名称。</p>
 <pre><code class="ruby">spec.module_name = 'Three20'
 </code></pre>
-<p>**<code>header_dir</code>**：存储头文件的目录，这样它们就不会被破坏。</p>
+<p><strong>header_dir</strong>：存储头文件的目录，这样它们就不会被破坏。</p>
 <pre><code class="ruby">spec.header_dir = 'Three20Core'
 </code></pre>
-<p>**<code>header_mappings_dir</code>**：用于保留头文件文件夹的目录。如未提供，头文件将被碾平。</p>
+<p><strong>header_mappings_dir</strong>：用于保留头文件文件夹的目录。如未提供，头文件将被碾平。</p>
 <pre><code class="ruby">spec.header_mappings_dir = 'src/include'
 </code></pre>
-<p>**<code>script_phases</code>**：该属性允许定义脚本在 pod 编译时执行，其作为 <code>xcode build</code> 命令的一部分执行，还可以利用编译期间所设置的环境变量。</p>
+<p><strong>script_phases</strong>：该属性允许定义脚本在 pod 编译时执行，其作为 <code>xcode build</code> 命令的一部分执行，还可以利用编译期间所设置的环境变量。</p>
 <pre><code class="ruby">spec.script_phases = [
     { :name =&gt; 'Hello World', :script =&gt; 'echo "Hello World"' },
     { :name =&gt; 'Hello Ruby World', :script =&gt; 'puts "Hello World"', :shell_path =&gt; '/usr/bin/ruby' },
   ]
 </code></pre>
 <h3 id="File-patterns"><a href="#File-patterns" class="headerlink" title="File patterns"></a>File patterns</h3><p>文件模式指定了库的所有文件管理方式，如源代码、头文件、framework、libaries、以及各种资源。其文件模式通配符形式可参考 <a target="_blank" rel="noopener" href="https://guides.cocoapods.org/syntax/podspec.html#group_file_patterns">LINK</a>。</p>
-<p>**<code>source_files</code>**：指定源文件</p>
+<p><strong>source_files</strong>：指定源文件</p>
 <pre><code class="ruby">spec.source_files = 'Classes/**/*.{h,m}', 'More_Classes/**/*.{h,m}'
 </code></pre>
-<p>**<code>public_header_files</code>**：指定公共头文件，这些头文件与源文件匹配，并生成文档向用户提供。如果未指定，则将 source_files 中的所有头文件都包含生成。</p>
+<p><strong>public_header_files</strong>：指定公共头文件，这些头文件与源文件匹配，并生成文档向用户提供。如果未指定，则将 source_files 中的所有头文件都包含生成。</p>
 <pre><code class="ruby">spec.public_header_files = 'Headers/Public/*.h'
 </code></pre>
-<p>**<code>project_header_files</code>**：指定项目头文件，与公共头文件相对应，以排除不应向用户项目公开且不应用于生成文档的标头，且不会出现在构建目录中。</p>
+<p><strong>project_header_files</strong>：指定项目头文件，与公共头文件相对应，以排除不应向用户项目公开且不应用于生成文档的标头，且不会出现在构建目录中。</p>
 <pre><code class="ruby">spec.project_header_files = 'Headers/Project/*.h'
 </code></pre>
-<p>**<code>private_header_files</code>**：私有头文件，与公共头文件对应，以排除不应向用户项目公开且不应用于生成文档的标头，这些头文件会出现在产物中的 PrivateHeader 文件夹中。</p>
+<p><strong>private_header_files</strong>：私有头文件，与公共头文件对应，以排除不应向用户项目公开且不应用于生成文档的标头，这些头文件会出现在产物中的 PrivateHeader 文件夹中。</p>
 <pre><code class="ruby">spec.private_header_files = 'Headers/Private/*.h'
 </code></pre>
-<p>**<code>vendered_frameworks</code>**：pod 附加的 framework 路径</p>
+<p><strong>vendered_frameworks</strong>：pod 附加的 framework 路径</p>
 <pre><code class="ruby">spec.ios.vendored_frameworks = 'Frameworks/MyFramework.framework'
 spec.vendored_frameworks = 'MyFramework.framework', 'TheirFramework.xcframework'    
 </code></pre>
-<p>**<code>vendered_libraries</code>**：pod 附加的 libraries 路径</p>
+<p><strong>vendered_libraries</strong>：pod 附加的 libraries 路径</p>
 <pre><code class="ruby">spec.ios.vendored_library = 'Libraries/libProj4.a'
 spec.vendored_libraries = 'libProj4.a', 'libJavaScriptCore.a'
 </code></pre>
-<p>**<code>on_demand_resources</code>**：根据 <a target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2015/214/">Introducing On demand Resources</a> 按需加载资源，不推荐与主工程共享标签，默认类别为 <code>category =&gt; :download_on_demand</code></p>
+<p><strong>on_demand_resources</strong>：根据 <a target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2015/214/">Introducing On demand Resources</a> 按需加载资源，不推荐与主工程共享标签，默认类别为 <code>category =&gt; :download_on_demand</code></p>
 <pre><code class="ruby">s.on_demand_resources = {
   'Tag1' =&gt; { :paths =&gt; ['file1.png', 'file2.png'], :category =&gt; :download_on_demand }
 }
@@ -384,25 +384,25 @@ s.on_demand_resources = {
   'Tag1' =&gt; { :paths =&gt; ['file1.png', 'file2.png'], :category =&gt; :initial_install }
 }
 </code></pre>
-<p>**<code>resources</code>**：为 pod 构建的 bundle 的名称和资源文件，其中 key 为 bundle 名称，值代表它们应用的文件模式。</p>
+<p><strong>resources</strong>：为 pod 构建的 bundle 的名称和资源文件，其中 key 为 bundle 名称，值代表它们应用的文件模式。</p>
 <pre><code class="ruby">spec.resource_bundles = {
     'MapBox' =&gt; ['MapView/Map/Resources/*.png'],
     'MapBoxOtherResources' =&gt; ['MapView/Map/OtherResources/*.png']
 }
 </code></pre>
-<p>**<code>exclude_files</code>**：排除的文件模式列表</p>
+<p><strong>exclude_files</strong>：排除的文件模式列表</p>
 <pre><code class="ruby">spec.ios.exclude_files = 'Classes/osx'
 spec.exclude_files = 'Classes/**/unused.{h,m}'
 </code></pre>
-<p>**<code>preserve_paths</code>**：下载后不应删除的文件。默认情况下，CocoaPods 会删除与其他文件模式不匹配的所有文件</p>
+<p><strong>preserve_paths</strong>：下载后不应删除的文件。默认情况下，CocoaPods 会删除与其他文件模式不匹配的所有文件</p>
 <pre><code class="ruby">spec.preserve_path = 'IMPORTANT.txt'
 spec.preserve_paths = 'Frameworks/*.framework'
 </code></pre>
-<p>**<code>module_map</code>**：pod 继承为 framework 时使用的模块映射文件，默认为 true，CocoaPods 根据 公共头文件创建 module_map 文件。</p>
+<p><strong>module_map</strong>：pod 继承为 framework 时使用的模块映射文件，默认为 true，CocoaPods 根据 公共头文件创建 module_map 文件。</p>
 <pre><code class="ruby">spec.module_map = 'source/module.modulemap'
 spec.module_map = false
 </code></pre>
-<h3 id="Subspecs"><a href="#Subspecs" class="headerlink" title="Subspecs"></a>Subspecs</h3><p>**<code>subspec</code>**：子模块的规范；实行双重继承：specs 自动继承所有 subspec 作为依赖项(除非指定默认 spec)；subspec 继承了父级的属性；</p>
+<h3 id="Subspecs"><a href="#Subspecs" class="headerlink" title="Subspecs"></a>Subspecs</h3><p><strong>subspec</strong>：子模块的规范；实行双重继承：specs 自动继承所有 subspec 作为依赖项(除非指定默认 spec)；subspec 继承了父级的属性；</p>
 <pre><code class="ruby"># 采用不同源文件的 Specs, CocoaPods 自动处理重复引用问题
 subspec 'Twitter' do |sp|
   sp.source_files = 'Classes/Twitter'
@@ -442,19 +442,19 @@ Pod::Spec.new do |s|
   end
 end
 </code></pre>
-<p>**<code>default_subspecs</code>**：默认子规范数组名称，不指定将全部子规范作为默认子规范，<code>:none</code> 表示不需要任何子规范。</p>
+<p><strong>default_subspecs</strong>：默认子规范数组名称，不指定将全部子规范作为默认子规范，<code>:none</code> 表示不需要任何子规范。</p>
 <pre><code class="ruby">spec.default_subspec = 'Core'
 spec.default_subspecs = 'Core', 'UI'
 spec.default_subspecs = :none    
 </code></pre>
-<p>**<code>scheme</code>**：用以给指定 scheme configuration 添加拓展</p>
+<p><strong>scheme</strong>：用以给指定 scheme configuration 添加拓展</p>
 <pre><code class="ruby">spec.scheme = { :launch_arguments =&gt; ['Arg1'] }
 spec.scheme = { :launch_arguments =&gt; ['Arg1', 'Arg2'], :environment_variables =&gt; { 'Key1' =&gt; 'Val1'} }
 </code></pre>
-<p>**<code>test_spec</code>**：测试规范，在 1.8 版本支持。可参考：<a target="_blank" rel="noopener" href="https://blog.cocoapods.org/CocoaPods-1.8.0-beta/">CocoaPods 1.8 Beta</a></p>
-<p>**<code>requires_app_host</code>**：是否需要宿主 APP 运行测试，仅适用于测试规范。</p>
-<p>**<code>app_host_name</code>**：必要时作用于应用程序的应用程序规范名称</p>
-<p>**<code>app_spec</code>**：宿主 APP 规范</p>
+<p><strong>test_spec</strong>：测试规范，在 1.8 版本支持。可参考：<a target="_blank" rel="noopener" href="https://blog.cocoapods.org/CocoaPods-1.8.0-beta/">CocoaPods 1.8 Beta</a></p>
+<p><strong>requires_app_host</strong>：是否需要宿主 APP 运行测试，仅适用于测试规范。</p>
+<p><strong>app_host_name</strong>：必要时作用于应用程序的应用程序规范名称</p>
+<p><strong>app_spec</strong>：宿主 APP 规范</p>
 <pre><code class="ruby">Pod::Spec.new do |s|
   s.name         = 'CannonPodder'
   s.version      = '1.0.0'
