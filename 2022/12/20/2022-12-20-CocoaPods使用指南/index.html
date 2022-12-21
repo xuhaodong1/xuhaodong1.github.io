@@ -30,7 +30,7 @@
 <p>一般来说，每次编辑 Podfile 时使用 <code>pod install</code>，仅在需要更新某个 pod 版本(所有版本)时才使用 pod update。同时，需提交 Podfile.lock 文件而不是 Pods 文件夹来达到同步所有 pod 版本的目的。</p>
 <p>ps: newer 代表更加新的，若采用中文理解起来比较别扭。</p>
 <h2 id="Podfile-语法规范"><a href="#Podfile-语法规范" class="headerlink" title="Podfile 语法规范"></a>Podfile 语法规范</h2><p>Podfile 描述了一个或多个 Xcode 项目的 target 依赖关系，它是一种 DSL，了解它对我们使用好 CocoaPods 是一个必不可少的步骤。下面列出其相关的语法规范：</p>
-<h3 id="Root-Options"><a href="#Root-Options" class="headerlink" title="Root Options"></a>Root Options</h3><p>**install!**：指定 CocoaPods 安装 Podfile 时使用的安装方法和选项。如：</p>
+<h3 id="Root-Options"><a href="#Root-Options" class="headerlink" title="Root Options"></a>Root Options</h3><p>install：指定 CocoaPods 安装 Podfile 时使用的安装方法和选项。如：</p>
 <pre><code class="ruby">install! 'cocoapods',
          :deterministic_uuids =&gt; false,
          :integrate_targets =&gt; false
@@ -50,7 +50,7 @@
 <li><code>:incremental_installation</code>：仅对自上次安装的 target 与其关联的 project 的变更部分进行重新生成，默认为 false。</li>
 <li><code>:skip_pods_project_generation</code>：是否跳过生成 Pods.xcodeproj 并仅进行依赖项解析与下载，默认为 false。</li>
 </ul>
-<p>**ensure_bundler!**：当 bundler 版本不匹配时发出警告。</p>
+<p>ensure_bundler!：当 bundler 版本不匹配时发出警告。</p>
 <pre><code class="ruby">ensure_bundler! '~&gt; 2.0.0'
 </code></pre>
 <h3 id="Dependencies"><a href="#Dependencies" class="headerlink" title="Dependencies"></a>Dependencies</h3><p><strong>pod</strong>：指定项目的依赖项</p>
