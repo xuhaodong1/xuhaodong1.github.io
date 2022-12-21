@@ -317,7 +317,6 @@ html {
   background-color: white;
   font-size: 16px;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
   min-width: 300px;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -1926,7 +1925,7 @@ fieldset[disabled] .button {
 }
 
 .content h1 {
-  font-size: 2em;
+  font-size: 1.75em;
   margin-bottom: 0.5em;
 }
 
@@ -1935,7 +1934,7 @@ fieldset[disabled] .button {
 }
 
 .content h2 {
-  font-size: 1.75em;
+  font-size: 1.5em;
   margin-bottom: 0.5714em;
 }
 
@@ -1944,7 +1943,7 @@ fieldset[disabled] .button {
 }
 
 .content h3 {
-  font-size: 1.5em;
+  font-size: 1.4em;
   margin-bottom: 0.6666em;
 }
 
@@ -10281,15 +10280,15 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
 }
 
 .is-family-primary {
-  font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important;
+  font-family: 'Merriweather', serif !important;
 }
 
 .is-family-secondary {
-  font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important;
+  font-family: 'Merriweather', serif !important;
 }
 
 .is-family-sans-serif {
-  font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important;
+  font-family: 'Merriweather', serif !important;
 }
 
 .is-family-monospace {
