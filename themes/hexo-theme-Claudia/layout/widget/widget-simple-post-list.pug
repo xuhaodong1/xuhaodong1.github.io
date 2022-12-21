@@ -1,0 +1,20 @@
+include methods
+
+article.post-container.is-flex.is-justify-content-center.section.container.is-max-widescreen.pt-4.px-2
+        div.columns.is-variable.is-1-tablet.is-3-desktop-only.is-2-widescreen.is-full-width
+            section.column
+                if site.posts.length > 0
+                    - var year = 0;
+                    - var change = false;
+                    section.content.post-card-content
+                        each post in site.posts.sort('date', -1).toArray()
+                            - var postURL = url_for(post.path)
+                            - var postYear = date(post.date, 'YYYY') - 0;
+                            - change = year != postYear;
+                            - year = change ? postYear : year;
+                                if change 
+                                    h3.is-family-serif
+                                        !=year
+                                if post.title
+                                    p.is-family-serif
+                                        a(href= postURL)= post.title

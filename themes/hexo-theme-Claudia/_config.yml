@@ -7,7 +7,7 @@ menu:
 
 widgets:
   - tag
-  - archive
+  # - archive
   - recent_posts
   - category
   - profile
