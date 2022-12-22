@@ -317,6 +317,7 @@ html {
   background-color: white;
   font-size: 16px;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
   min-width: 300px;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -378,7 +379,7 @@ a:hover {
 code {
   background-color: whitesmoke;
   color: --second-text-color;
-  font-size: 85%;
+  font-size: 0.9em;
   font-weight: normal;
   padding: 0.2em 0.4em;
 }
@@ -1935,20 +1936,20 @@ fieldset[disabled] .button {
 
 .content h2 {
   font-size: 1.5em;
-  margin-bottom: 0.5714em;
+  margin-bottom: 1.0em;
 }
 
 .content h2:not(:first-child) {
-  margin-top: 0.025em;
+  margin-top: 1.0em;
 }
 
 .content h3 {
   font-size: 1.4em;
-  margin-bottom: 0.6666em;
+  margin-bottom: 1.0em;
 }
 
 .content h3:not(:first-child) {
-  margin-top: 0.025em;
+  margin-top: 1.0em;
 }
 
 .content h4 {
@@ -2902,7 +2903,7 @@ fieldset[disabled] .button {
   border-radius: 4px;
   color: #404040;
   display: inline-flex;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   height: 2em;
   justify-content: center;
   line-height: 1.5;

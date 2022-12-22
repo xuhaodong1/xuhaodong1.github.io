@@ -18,14 +18,14 @@ block content
         .columns.is-flex-desktop.is-justify-content-center.is-flex-direction-row-reverse
             .column.is-3.is-hidden-mobile(class= tocContent.length < 1 && 'is-hidden')!= tocContent
             .column.is-9
-                header.my-4
+                h1.mt-0.mb-1.is-family-serif#postTitle= page.title
+                header.my-5
                     if page.tags && page.tags.length > 0
                         each tag in page.tags.toArray()
                             a(href= url_for(`/tags/${tag.name}`))
                                 i.tag.post-item-tag= tag.name
-                h1.mt-0.mb-1.is-family-serif#postTitle= page.title
-                if page.date
-                    time.has-text-grey(datetime=page.date.toJSON())= date(page.date, date_format)
+                    if page.date
+                        time.has-text-grey(datetime=page.date.toJSON())= date(page.date, date_format)
                 article.mt-2.post-content!= page.content
                 section.jump-container.is-flex.is-justify-content-space-between.my-6
                     // em is empty placeholder

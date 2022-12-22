@@ -17,16 +17,16 @@ article.post-container.is-flex.is-justify-content-center.section.container.is-ma
                                     a.post-cover-link.has-text-centered.skeleton(href= postURL)
                                         img.post-cover-img.js-img-fadeIn(src= imgURL alt="loading..", data-backdrop="true")
                             section.content.post-card-content.p-4.pb-5
-                                if post.tags && post.tags.length > 0
-                                    header
-                                            each tag in post.tags.toArray()
-                                                a(href= url_for(`/tags/${tag.name}`))
-                                                    i.tag.post-item-tag= tag.name
+                                header
+                                    if post.tags && post.tags.length > 0
+                                        each tag in post.tags.toArray()
+                                            a(href= url_for(`/tags/${tag.name}`))
+                                                i.tag.post-item-tag= tag.name
+                                    if post.date
+                                        time.has-text-grey(datetime=post.date.toJSON())= date(post.date, date_format)
                                 if post.title
                                     h2.mt-4.mb-0.is-family-serif
                                         a(href= postURL)= post.title
-                                if post.date
-                                    time.has-text-grey(datetime=post.date.toJSON())= date(post.date, date_format)
                                 p.is-flex-grow-2.mt-2
                                     = truncate( strip_html(postContent), {length: 360, omission: '..'} )
                                 a.button.is-default.mt-2.has-text-weight-semibold(href= postURL)= __('read_more')
