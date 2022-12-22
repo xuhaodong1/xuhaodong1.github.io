@@ -44,7 +44,7 @@
   word-break: break-word;
 }
 .post-container .post-item-card .post-card-content time {
-  font-size: 14px;
+  font-size: 16px;
 }
 .post-container .aside-card-container {
   padding: 10px;
@@ -180,7 +180,7 @@
   font-weight: bold;
 }
 .post-container .recent-widget section time {
-  font-size: 12px;
+  font-size: 16px;
 }
 .post-container .archives-widget > section {
   overflow: auto;
@@ -214,5 +214,5 @@
 .post-container .paginator .page-number.current,
 .post-container .paginator .extend.current {
   color: #fff !important;
-  background: #3273dc;
+  background: darkorange;
 }

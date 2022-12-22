@@ -58,7 +58,7 @@
   will-change: opacity;
 }
 .post-page .post-content a {
-  color: #3273dc;
+  color: darkorange;
 }
 .post-page .jump-container .button {
   max-width: calc(50% - 5px);
@@ -91,7 +91,7 @@
   list-style: none !important;
 }
 .post-page .toc .is-active span {
-  color: #3273dc !important;
+  color: darkorange !important;
 }
 .post-page :target {
   padding-top: 60px;
