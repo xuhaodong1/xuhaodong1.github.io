@@ -1,5 +1,5 @@
 ---
-title: "iOS中的事件以及事件传递机制"
+title: "iOS中的内存管理｜ARC"
 date: 2023-07-20 09:49:00
 categories:
   - iOS
