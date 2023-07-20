@@ -20,5 +20,4 @@ codekit-config.json
 
 # macOS
 .DS_Store
-public
 db.json

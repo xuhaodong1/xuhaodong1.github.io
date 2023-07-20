@@ -1,0 +1,408 @@
+<!DOCTYPE html><html class="appearance-auto" lang="en"><head><meta charset="UTF-8"><title>iOS 编译过程</title><meta name="description" content="不以功利为目的."><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, initial-scale=1"><!-- Google Analytics --><!-- End Google Analytics -->
+<!-- Baidu Analytics --><!-- End Baidu Analytics --><link rel="icon" href="/images/avatar.jpeg"><link rel="stylesheet" href="/style/common/bulma.css"><link rel="stylesheet" href="/style/base.css"><link rel="stylesheet" href="/style/common/helper.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Merriweather"><script src="/js/common.js"></script><link rel="stylesheet" href="/style/post.css"><link rel="stylesheet" href="/style/themes/highlight-theme-light.css"><script src="/js/highlight.pack.js"></script><meta name="description" content="前言学习 iOS 编译过程（Compile）有助于我们更好理解代码是如何被计算机运作起来，编译器为代码做了哪些优化，让我们学会从另一个角度来看待问题。
+
+编译器结构现代编译器是将源代码转换成可执行文件的程序，工作流程主要分为 前端 和 后端 两个部分：
+
+前端：对源代码进行解析，并生成中间代码。
+后端：针对中间代码进行优化，并转换成目标机器的代码指令。
+
+graph LR
+    A(SourceCode) --&amp;gt; B(Frontend)
+    B(Frontend) --&amp;gt; C(Backend)
+    C(Backend) --&amp;gt; D(Machine Code)
+
+针对iOS平台，不同语言采用了不同的编译器前端：
+
+Frontend：Clang / SwiftC
+对于 Objecti.."><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="nihao' Blog" type="application/atom+xml">
+
+<style>.github-emoji { position: relative; display: inline-block; width: 1.2em; min-height: 1.2em; overflow: hidden; vertical-align: top; color: transparent; }  .github-emoji > span { position: relative; z-index: 10; }  .github-emoji img, .github-emoji .fancybox { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; text-decoration: none !important; user-select: none !important; cursor: auto !important; }  .github-emoji img { height: 1.2em !important; width: 1.2em !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; user-select: none !important; cursor: auto !important; } .github-emoji-fallback { color: inherit; } .github-emoji-fallback img { opacity: 0 !important; }</style>
+</head><body class="is-flex is-flex-direction-column"><header class="header-widget is-flex-shrink-0 is-hidden-mobile"><div class="container is-fullhd is-flex is-justify-content-space-between is-align-items-center is-full-height"><section class="is-hidden-mobile is-flex-shrink-0"><h2><a href="/">nihao's blog</a></h2></section><h3 class="is-hidden-mobile is-family-serif is-full-height is-flex is-align-items-center is-flex-shrink-0"><div class="is-full-height" id="postTopic"><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">iOS 编译过程</p><p class="is-full-height is-flex-shrink-0 is-flex is-align-items-center is-justify-content-center">Click back to the top</p></div></h3><aside class="is-flex-shrink-0"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3></aside></div></header><header class="is-flex header-widget is-flex-shrink-0 is-align-items-center is-justify-content-center is-hidden-tablet"><h3 class="is-inline-block"><a href="/">Home</a></h3><h3 class="is-inline-block"><a href="/archives">Archives</a></h3><h3 class="is-inline-block"><a href="/about">About</a></h3></header><main><main class="container is-max-widescreen content section post-page pt-4 px-4"><div class="columns is-flex-desktop is-justify-content-center is-flex-direction-row-reverse"><div class="column is-3 is-hidden-mobile"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E5%99%A8%E7%BB%93%E6%9E%84"><span class="toc-text">编译器结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B"><span class="toc-text">编译过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%81%E7%A8%8B%E6%A2%B3%E7%90%86"><span class="toc-text">流程梳理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Clang%E9%98%B6%E6%AE%B5%EF%BC%88Objective-C-C-C-Objective-C-%EF%BC%89"><span class="toc-text">Clang阶段（Objective-C &#x2F; C++ &#x2F; C &#x2F; Objective-C++）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%A2%84%E5%A4%84%E7%90%86%E9%98%B6%E6%AE%B5%EF%BC%9A"><span class="toc-text">预处理阶段：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90%E9%98%B6%E6%AE%B5"><span class="toc-text">词法分析阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90%E9%98%B6%E6%AE%B5"><span class="toc-text">语法分析阶段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#CodeGen%E9%98%B6%E6%AE%B5"><span class="toc-text">CodeGen阶段</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LLVM-Optimizer-%E9%98%B6%E6%AE%B5"><span class="toc-text">LLVM Optimizer 阶段</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#IR%E4%BB%A3%E7%A0%81%E4%BC%98%E5%8C%96"><span class="toc-text">IR代码优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E6%88%90-BitCode%EF%BC%88Archive%E6%97%B6%EF%BC%89"><span class="toc-text">生成 BitCode（Archive时）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LLVM-Code-Generator%E9%98%B6%E6%AE%B5"><span class="toc-text">LLVM Code Generator阶段</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81"><span class="toc-text">生成汇编代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%9F%E6%88%90%E6%9C%BA%E5%99%A8%E4%BB%A3%E7%A0%81"><span class="toc-text">生成机器代码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5"><span class="toc-text">链接</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="column is-9"><h1 class="mt-0 mb-1 is-family-serif" id="postTitle">iOS 编译过程</h1><header class="my-5"><a href="/tags/iOS"><i class="tag post-item-tag">iOS</i></a><a href="/tags/Compile"><i class="tag post-item-tag">Compile</i></a><time class="has-text-grey" datetime="2021-11-03T14:54:49.000Z">2021-11-03</time></header><article class="mt-2 post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>学习 <strong>iOS</strong> 编译过程（<strong>Compile</strong>）有助于我们更好理解代码是如何被计算机运作起来，编译器为代码做了哪些优化，让我们学会从另一个角度来看待问题。</p>
+<span id="more"></span>
+<h2 id="编译器结构"><a href="#编译器结构" class="headerlink" title="编译器结构"></a>编译器结构</h2><p>现代编译器是将源代码转换成可执行文件的程序，工作流程主要分为 <strong>前端</strong> 和 <strong>后端</strong> 两个部分：</p>
+<ol>
+<li>前端：对源代码进行解析，并生成中间代码。</li>
+<li>后端：针对中间代码进行优化，并转换成目标机器的代码指令。</li>
+</ol>
+<pre class="mermaid">graph LR
+    A(SourceCode) --&gt; B(Frontend)
+    B(Frontend) --&gt; C(Backend)
+    C(Backend) --&gt; D(Machine Code)</pre>
+
+<p>针对iOS平台，不同语言采用了不同的编译器前端：</p>
+<ol>
+<li><p><strong>Frontend：Clang / SwiftC</strong></p>
+<p>对于 <strong>Objective-C / C / C++ / Objective-C++</strong>  来说采用 <strong>Clang</strong> 编译器前端；</p>
+<p>对于 <strong>Swift</strong> 来说则采用 <strong>SwiftC</strong>；</p>
+</li>
+<li><p><strong>Backend：LLVM</strong></p>
+<p>无论是 <strong>C</strong> 系语言还是 <strong>Swift</strong> 都采用 <strong>LLVM</strong> 作为编译器后端；</p>
+</li>
+</ol>
+<p>值得注意的是在 <strong>Xcode3</strong> 以前，都采用 <strong>GCC</strong> 作为编译器前端，但为 <strong>Apple</strong> 快速发展需要功能更强大和性能更好的编译器，所以 <strong>Apple</strong> 自己开发了 <strong>Clang</strong> 作为编译器前端。下面对编译器做一个简要介绍：</p>
+<ul>
+<li><strong>GCC</strong></li>
+</ul>
+<p><strong>GCC</strong>（<strong>GNU Compile Collection</strong>，**GNU **编译器套装），是一套由 <strong>GNU</strong> 开发的编程语言编译器。来本只能处理 <em>C</em> 语言，后来快速演进，变得可处理 <strong>C++、Objective-C、Java、Fortran</strong> 等其他语言。但由于一些缺陷，导致了 <strong>Apple</strong> 抛弃了 <strong>GCC</strong> ，开发出了 <strong>Clang</strong> 作为其前端编译器。</p>
+<ol>
+<li><strong>GCC</strong> 的 <strong>Objective-C Frontend</strong> 不是 <strong>Apple</strong> 维护，导致想要添加一些语法提示等功能得去要求 <strong>GCC</strong> 团队做。</li>
+<li><strong>GCC</strong> 的插件、工具、<strong>IDE</strong> 的支持薄弱。</li>
+<li><strong>GCC</strong> 的编译效率和性能不足。</li>
+</ol>
+<ul>
+<li><strong>Clang</strong></li>
+</ul>
+<p><strong>Clang1.0</strong> 于 <strong>2009</strong> 年正式与 <strong>LLVM2.6</strong> 正式发布，旨在提供 <strong>GCC</strong> 的替代品，支持了 <strong>GUN</strong> 编译器大多数的编译器设置以及非官方语言的拓展，相较于 <strong>GCC</strong> ，<strong>Clang</strong> 具有以下优势：</p>
+<ol>
+<li>编译速度更快。</li>
+<li>占用内存更小。</li>
+<li>模块化设计，易于拓展与重用。</li>
+<li>诊断信息可读性强。</li>
+</ol>
+<ul>
+<li><strong>SwiftC</strong></li>
+</ul>
+<p><strong>SwiftC</strong> 在前端采用了 <strong>SIL</strong> 中间语言，这是因为 <strong>Swift</strong> 作为一种高级语言，有许多特性，如 <strong>protocol</strong> 的泛型，也是一门安全的语言，确保变量在使用之前被初始化、检测不可执行的代码，于是增加了一层 <strong>SIL</strong> 来做这些事情。</p>
+<ul>
+<li><strong>LLVM</strong></li>
+</ul>
+<p><strong>LLVM</strong> 是一套编译器基础设备项目，由 <strong>C++</strong> 写成，包含一系列模块化的编译器组件和工具链，用来开发编译器的前端和后端。在 <strong>iOS</strong> 中，<strong>LLVM</strong> 作为编译器后端主要提供 <strong>Optimizer</strong> 和 <strong>Code Generator</strong> ，将接收到的 <strong>IR</strong> 中间代码进行优化，以及机器代码生成。</p>
+<h2 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h2><h3 id="流程梳理"><a href="#流程梳理" class="headerlink" title="流程梳理"></a>流程梳理</h3><pre class="mermaid">graph TD
+    subgraph Clang
+    id1(源代码) --&gt; id2(预处理) 
+    id2(预处理) --&gt; id3(语法分析)   
+    id3(词法分析) --  token  --&gt; id4(语法分析)
+    id4(语法分析) --  AST  --&gt; id5(中间代码生成)
+    end
+    
+    subgraph Optimizer, Backend
+    id6(中间代码优化) --&gt; id7(BitCode生成)
+    id7(BitCode生成) --&gt; id8(汇编指令生成)
+    id8(汇编指令生成) --&gt; id9(机器码生成)
+    id9(机器码生成) --&gt; id11(链接生成可执行文件)
+    end
+    
+    subgraph SwiftC
+    id12(源代码) --&gt; id13(解析)
+    id13(解析) --&gt; id14(语义分析)
+    id14(语义分析) --&gt; id16(Raw SIL生成)
+    id16(Raw SIL生成) --&gt; id17(Canonical SIL生成)
+    id17 --&gt; id18(SIL优化)
+    id18(SIL优化) --&gt; id19(中间代码生成)
+    end
+    
+    id5 --  IR  --&gt; id6
+    id19 --  IR  --&gt; id6</pre>
+
+<p>在前端 <strong>Objective-C</strong> 和 <strong>Swift</strong> 分别由自己的处理阶段，但最后都会生成 <strong>IR</strong> 中间代码，交由后端进行统一处理。</p>
+<p>下面我们从一个简单的.m文件进行编译过程梳理，首先在某一个目录下创建一个 <strong>nihao.m</strong>文件</p>
+<pre><code class="shell">touch nihao.m
+</code></pre>
+<p><strong>nihao.m：</strong></p>
+<pre><code class="objective-c">#import &lt;Foundation/Foundation.h&gt;
+int main(int argc, char *argv[])
+{
+    @autoreleasepool {
+        NSLog(@"nihao!!!");
+        return 0;
+    }
+}
+</code></pre>
+<h3 id="Clang阶段（Objective-C-C-C-Objective-C-）"><a href="#Clang阶段（Objective-C-C-C-Objective-C-）" class="headerlink" title="Clang阶段（Objective-C / C++ / C / Objective-C++）"></a>Clang阶段（Objective-C / C++ / C / Objective-C++）</h3><h4 id="预处理阶段："><a href="#预处理阶段：" class="headerlink" title="预处理阶段："></a>预处理阶段：</h4><pre><code class="shell">xcrun clang -E helloworld.c | open -f
+</code></pre>
+<pre><code># 1 "nihao.m"
+# 1 "&lt;built-in&gt;" 1
+# 1 "&lt;built-in&gt;" 3
+# 380 "&lt;built-in&gt;" 3
+# 1 "&lt;command line&gt;" 1
+# 1 "&lt;built-in&gt;" 2
+# 1 "nihao.m" 2
+# 1 "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Foundation.framework/Headers/Foundation.h" 1 3
+
+...
+...
+...
+
+int main(int argc, char *argv[])
+{
+    @autoreleasepool {
+        NSLog(@"nihao!!!");
+        return 0;
+    }
+}
+</code></pre>
+<p>将预处理阶段输出到文件， 可以看到很多以 <strong>#</strong> 开头的语句，这些语句告诉我们后面跟着的内容来自哪里，这里可以看见 <strong>Foundation.h</strong> 文件的内容也包含了进来。在 <strong>Xcode</strong> 中，也可以通过 <strong>Product -&gt;  Perfrom Action -&gt; Preprocess</strong> 查看预处理阶段之后的代码。在预处理阶段做了以下这些事情：</p>
+<ul>
+<li>将头文件引入的其他文件加入源文件中，是一个递归的过程。</li>
+<li>进行条件编译处理。</li>
+<li>将宏定义直接替换，不进行语法检查。</li>
+<li>将注释进行删除处理。</li>
+</ul>
+<h4 id="词法分析阶段"><a href="#词法分析阶段" class="headerlink" title="词法分析阶段"></a>词法分析阶段</h4><pre><code class="shell">xcrun clang -fmodules -fsyntax-only -Xclang -dump-tokens nihao.m
+</code></pre>
+<pre><code>annot_module_include '#import &lt;Foundation/Foundation.h&gt;
+
+'        Loc=&lt;nihao.m:1:1&gt;
+int 'int'     [StartOfLine]    Loc=&lt;nihao.m:3:1&gt;
+identifier 'main'     [LeadingSpace]    Loc=&lt;nihao.m:3:5&gt;
+l_paren '('        Loc=&lt;nihao.m:3:9&gt;
+int 'int'        Loc=&lt;nihao.m:3:10&gt;
+identifier 'argc'     [LeadingSpace]    Loc=&lt;nihao.m:3:14&gt;
+comma ','        Loc=&lt;nihao.m:3:18&gt;
+char 'char'     [LeadingSpace]    Loc=&lt;nihao.m:3:20&gt;
+star '*'     [LeadingSpace]    Loc=&lt;nihao.m:3:25&gt;
+identifier 'argv'        Loc=&lt;nihao.m:3:26&gt;
+l_square '['        Loc=&lt;nihao.m:3:30&gt;
+r_square ']'        Loc=&lt;nihao.m:3:31&gt;
+r_paren ')'        Loc=&lt;nihao.m:3:32&gt;
+l_brace '{'     [StartOfLine]    Loc=&lt;nihao.m:4:1&gt;
+at '@'     [StartOfLine] [LeadingSpace]    Loc=&lt;nihao.m:5:5&gt;
+identifier 'autoreleasepool'        Loc=&lt;nihao.m:5:6&gt;
+...
+</code></pre>
+<p>词法分析阶段其实是将源代码以字符文本的形式转换成 <strong>Token</strong> 流的形式，不涉及语义校验，用来标识出这个字符是标识符、括号、if语句…，最后还会标识出其所在位置，方便后续分析能够找出出错的原始位置。</p>
+<h4 id="语法分析阶段"><a href="#语法分析阶段" class="headerlink" title="语法分析阶段"></a>语法分析阶段</h4><pre><code>xcrun clang -fsyntax-only -Xclang -ast-dump nihao.m | open -f
+</code></pre>
+<pre><code>...
+`-FunctionDecl 0x7f9eb4bd61a0 &lt;nihao.m:3:1, line:9:1&gt; line:3:5 main 'int (int, char **)'
+  |-ParmVarDecl 0x7f9eb4bd5fc0 &lt;col:10, col:14&gt; col:14 argc 'int'
+  |-ParmVarDecl 0x7f9eb4bd6080 &lt;col:20, col:31&gt; col:26 argv 'char **':'char **'
+  `-CompoundStmt 0x7f9eb4bd63d0 &lt;line:4:1, line:9:1&gt;
+    `-ObjCAutoreleasePoolStmt 0x7f9eb4bd63b8 &lt;line:5:5, line:8:5&gt;
+      `-CompoundStmt 0x7f9eb4bd6398 &lt;line:5:22, line:8:5&gt;
+        |-CallExpr 0x7f9eb4bd6328 &lt;line:6:9, col:26&gt; 'void'
+        | |-ImplicitCastExpr 0x7f9eb4bd6310 &lt;col:9&gt; 'void (*)(id, ...)' &lt;FunctionToPointerDecay&gt;
+        | | `-DeclRefExpr 0x7f9eb4bd6250 &lt;col:9&gt; 'void (id, ...)' Function 0x7f9eb0c8d6c8 'NSLog' 'void (id, ...)'
+        | `-ImplicitCastExpr 0x7f9eb4bd6350 &lt;col:15, col:16&gt; 'id':'id' &lt;BitCast&gt;
+        |   `-ObjCStringLiteral 0x7f9eb4bd6290 &lt;col:15, col:16&gt; 'NSString *'
+        |     `-StringLiteral 0x7f9eb4bd6270 &lt;col:16&gt; 'char [9]' lvalue "nihao!!!"
+        `-ReturnStmt 0x7f9eb4bd6388 &lt;line:7:9, col:16&gt;
+          `-IntegerLiteral 0x7f9eb4bd6368 &lt;col:16&gt; 'int' 0
+</code></pre>
+<p>语法分析阶段会输出 <strong>AST</strong>（抽象语法树），它是源代码语法结构的一种抽象表示。它以树状的形式表现编程语言的语法结构，树上的每个节点都表示源代码中的一种结构。通过它，可以进行语法错误分析，以及静态分析操作，涵盖内存操作和安全等方面。</p>
+<h4 id="CodeGen阶段"><a href="#CodeGen阶段" class="headerlink" title="CodeGen阶段"></a>CodeGen阶段</h4><pre><code class="shell">xcrun clang -S -fobjc-arc -emit-llvm nihao.m -o nihao.ll
+</code></pre>
+<pre><code>; ModuleID = 'nihao.m'
+source_filename = "nihao.m"
+target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx11.0.0"
+
+%struct.__NSConstantString_tag = type { i32*, i32, i8*, i64 }
+
+@__CFConstantStringClassReference = external global [0 x i32]
+@.str = private unnamed_addr constant [9 x i8] c"nihao!!!\00", section "__TEXT,__cstring,cstring_literals", align 1
+@_unnamed_cfstring_ = private global %struct.__NSConstantString_tag { i32* getelementptr inbounds ([0 x i32], [0 x i32]* @__CFConstantStringClassReference, i32 0, i32 0), i32 1992, i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str, i32 0, i32 0), i64 8 }, section "__DATA,__cfstring", align 8 #0
+
+; Function Attrs: noinline optnone ssp uwtable
+define i32 @main(i32 %0, i8** %1) #1 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  %5 = alloca i8**, align 8
+  store i32 0, i32* %3, align 4
+  store i32 %0, i32* %4, align 4
+  store i8** %1, i8*** %5, align 8
+  %6 = call i8* @llvm.objc.autoreleasePoolPush() #2
+  notail call void (i8*, ...) @NSLog(i8* bitcast (%struct.__NSConstantString_tag* @_unnamed_cfstring_ to i8*))
+  store i32 0, i32* %3, align 4
+  call void @llvm.objc.autoreleasePoolPop(i8* %6)
+  %7 = load i32, i32* %3, align 4
+  ret i32 %7
+}
+
+; Function Attrs: nounwind
+declare i8* @llvm.objc.autoreleasePoolPush() #2
+
+declare void @NSLog(i8*, ...) #3
+
+; Function Attrs: nounwind
+declare void @llvm.objc.autoreleasePoolPop(i8*) #2
+
+attributes #0 = { "objc_arc_inert" }
+attributes #1 = { noinline optnone ssp uwtable "darwin-stkchk-strong-link" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="true" "probe-stack"="___chkstk_darwin" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "tune-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #2 = { nounwind }
+attributes #3 = { "darwin-stkchk-strong-link" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="true" "probe-stack"="___chkstk_darwin" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "tune-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
+
+!llvm.module.flags = !{!0, !1, !2, !3, !4, !5, !6, !7}
+!llvm.ident = !{!8}
+
+!0 = !{i32 2, !"SDK Version", [2 x i32] [i32 12, i32 0]}
+!1 = !{i32 1, !"Objective-C Version", i32 2}
+!2 = !{i32 1, !"Objective-C Image Info Version", i32 0}
+!3 = !{i32 1, !"Objective-C Image Info Section", !"__DATA,__objc_imageinfo,regular,no_dead_strip"}
+!4 = !{i32 1, !"Objective-C Garbage Collection", i8 0}
+!5 = !{i32 1, !"Objective-C Class Properties", i32 64}
+!6 = !{i32 1, !"wchar_size", i32 4}
+!7 = !{i32 7, !"PIC Level", i32 2}
+!8 = !{!"Apple clang version 13.0.0 (clang-1300.0.29.3)"}
+</code></pre>
+<p><strong>CodeGen</strong> 阶段负责将 <strong>AST</strong> 自顶向下遍历逐步翻译成 <strong>LLVM IR</strong>，也就是编译器后端所需要的中间代码，同时 <strong>Objective-C</strong> 代码也会在这一步进行 <strong>Runtime</strong> 桥接： <strong>property</strong> 合成，<strong>ARC</strong> 处理等，如上方可以看见 <strong>autoreleasePoolPush</strong> 、 <strong>autoreleasePoolPop</strong> 操作。</p>
+<p>至此 <strong>Clang</strong> 前端工作算是完成，接下来就交给后端进行处理。</p>
+<h3 id="LLVM-Optimizer-阶段"><a href="#LLVM-Optimizer-阶段" class="headerlink" title="LLVM Optimizer 阶段"></a>LLVM Optimizer 阶段</h3><h4 id="IR代码优化"><a href="#IR代码优化" class="headerlink" title="IR代码优化"></a>IR代码优化</h4><pre><code class="shell">xcrun clang -Os -S -fobjc-arc -emit-llvm nihao.m -o nihao.ll
+</code></pre>
+<pre><code>; ModuleID = 'nihao.m'
+source_filename = "nihao.m"
+target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx11.0.0"
+
+%struct.__NSConstantString_tag = type { i32*, i32, i8*, i64 }
+
+@__CFConstantStringClassReference = external global [0 x i32]
+@.str = private unnamed_addr constant [9 x i8] c"nihao!!!\00", section "__TEXT,__cstring,cstring_literals", align 1
+@_unnamed_cfstring_ = private global %struct.__NSConstantString_tag { i32* getelementptr inbounds ([0 x i32], [0 x i32]* @__CFConstantStringClassReference, i32 0, i32 0), i32 1992, i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str, i32 0, i32 0), i64 8 }, section "__DATA,__cfstring", align 8 #0
+
+; Function Attrs: optsize ssp uwtable
+define i32 @main(i32 %0, i8** nocapture readnone %1) local_unnamed_addr #1 {
+  %3 = tail call i8* @llvm.objc.autoreleasePoolPush() #2
+  notail call void (i8*, ...) @NSLog(i8* bitcast (%struct.__NSConstantString_tag* @_unnamed_cfstring_ to i8*)) #4, !clang.arc.no_objc_arc_exceptions !9
+  tail call void @llvm.objc.autoreleasePoolPop(i8* %3) #2
+  ret i32 0
+}
+
+; Function Attrs: nounwind
+declare i8* @llvm.objc.autoreleasePoolPush() #2
+
+; Function Attrs: optsize
+declare void @NSLog(i8*, ...) local_unnamed_addr #3
+
+; Function Attrs: nounwind
+declare void @llvm.objc.autoreleasePoolPop(i8*) #2
+
+attributes #0 = { "objc_arc_inert" }
+attributes #1 = { optsize ssp uwtable "darwin-stkchk-strong-link" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="true" "probe-stack"="___chkstk_darwin" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "tune-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #2 = { nounwind }
+attributes #3 = { optsize "darwin-stkchk-strong-link" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="true" "probe-stack"="___chkstk_darwin" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "tune-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #4 = { optsize }
+
+!llvm.module.flags = !{!0, !1, !2, !3, !4, !5, !6, !7}
+!llvm.ident = !{!8}
+
+!0 = !{i32 2, !"SDK Version", [2 x i32] [i32 12, i32 0]}
+!1 = !{i32 1, !"Objective-C Version", i32 2}
+!2 = !{i32 1, !"Objective-C Image Info Version", i32 0}
+!3 = !{i32 1, !"Objective-C Image Info Section", !"__DATA,__objc_imageinfo,regular,no_dead_strip"}
+!4 = !{i32 1, !"Objective-C Garbage Collection", i8 0}
+!5 = !{i32 1, !"Objective-C Class Properties", i32 64}
+!6 = !{i32 1, !"wchar_size", i32 4}
+!7 = !{i32 7, !"PIC Level", i32 2}
+!8 = !{!"Apple clang version 13.0.0 (clang-1300.0.29.3)"}
+!9 = !{}
+</code></pre>
+<p><strong>IR</strong> 代码优化会调用相应 <strong>Pass</strong> 进行处理，<strong>Pass</strong> 由多个节点组成，都是 <strong>Pass</strong> 类的子类，每个节点负责特定的优化。这使得我们能够自主的控制优化的强度，在<strong>Build Strrings -&gt; Optimization Level</strong> 中可指定优化程度，一些常见的代码优化方法如下：</p>
+<ul>
+<li>删除公共子表达式</li>
+<li>删除无用代码</li>
+<li>常量合并</li>
+<li>代码移动</li>
+<li>删除归纳变量</li>
+</ul>
+<h4 id="生成-BitCode（Archive时）"><a href="#生成-BitCode（Archive时）" class="headerlink" title="生成 BitCode（Archive时）"></a>生成 BitCode（Archive时）</h4><pre><code class="shell">xrun clang -emit-llvm -c nihao.m -o nihao.bc
+</code></pre>
+<pre><code>dec0 170b 0000 0000 1400 0000 0010 0000
+0700 0001 4243 c0de 3514 0000 0700 0000
+620c 3024 9596 a6a5 f7d7 7f7d d3b4 4ffb
+76ef df3f 2d44 0132 0500 0000 210c 0000
+4903 0000 0b02 2100 0200 0000 1600 0000
+0781 2391 41c8 0449 0610 3239 9201 840c
+2505 0819 1e04 8b62 8014 4502 4292 0b42
+a410 3214 3808 184b 0a32 5288 4870 c421
+...
+</code></pre>
+<p><strong>BitCode</strong> 是 <strong>LLVM</strong> 引入的另一种中间代码，虽然看起来比较接近机器码，但是在函数和指令层面使用了很多高级语言的特性。</p>
+<p>但只会在 <strong>Archive</strong> 时，<strong>BitCode</strong> 才会被嵌入到链接后的二进制文件，用于提交给 <strong>App Store</strong>，包含 <strong>Bitcode</strong> 配置的程序将会在 <strong>App Store</strong> 上被重新编译和链接，进而对可执行文件做优化。值得注意的是，优化这一步是在 <strong>App Store</strong> 中做的处理，本地没有做处理。进行其他类型的 <strong>Build</strong> (非 <strong>Archive</strong> )时，编译器只会检查是否满足开启 <strong>BitCode</strong> 的条件，但并不会真正生成 <strong>BitCode</strong> 。</p>
+<h3 id="LLVM-Code-Generator阶段"><a href="#LLVM-Code-Generator阶段" class="headerlink" title="LLVM Code Generator阶段"></a>LLVM Code Generator阶段</h3><h4 id="生成汇编代码"><a href="#生成汇编代码" class="headerlink" title="生成汇编代码"></a>生成汇编代码</h4><pre><code class="shell">xcrun clang -S -fobjc-arc nihao.m -o nihao.s
+</code></pre>
+<pre><code>    .section    __TEXT,__text,regular,pure_instructions
+    .build_version macos, 11, 0    sdk_version 12, 0
+    .globl    _main                           ## -- Begin function main
+    .p2align    4, 0x90
+_main:                                  ## @main
+    .cfi_startproc
+## %bb.0:
+    pushq    %rbp
+    .cfi_def_cfa_offset 16
+    .cfi_offset %rbp, -16
+    movq    %rsp, %rbp
+    .cfi_def_cfa_register %rbp
+    subq    $32, %rsp
+    movl    $0, -4(%rbp)
+    movl    %edi, -8(%rbp)
+    movq    %rsi, -16(%rbp)
+    callq    _objc_autoreleasePoolPush
+    movq    %rax, -24(%rbp)                 ## 8-byte Spill
+    leaq    L__unnamed_cfstring_(%rip), %rdi
+    movb    $0, %al
+    callq    _NSLog
+    movq    -24(%rbp), %rdi                 ## 8-byte Reload
+    movl    $0, -4(%rbp)
+    callq    _objc_autoreleasePoolPop
+    movl    -4(%rbp), %eax
+    addq    $32, %rsp
+    popq    %rbp
+    retq
+    .cfi_endproc
+                                        ## -- End function
+    .section    __TEXT,__cstring,cstring_literals
+L_.str:                                 ## @.str
+    .asciz    "nihao!!!"
+
+    .section    __DATA,__cfstring
+    .p2align    3                               ## @_unnamed_cfstring_
+L__unnamed_cfstring_:
+    .quad    ___CFConstantStringClassReference
+    .long    1992                            ## 0x7c8
+    .space    4
+    .quad    L_.str
+    .quad    8                               ## 0x8
+
+    .section    __DATA,__objc_imageinfo,regular,no_dead_strip
+L_OBJC_IMAGE_INFO:
+    .long    0
+    .long    64
+
+.subsections_via_symbols
+</code></pre>
+<p>汇编语言更加接近机器语言，能够直接对硬件进行操作，生成的程序与其他的语言相比具有更高的运行速度，占用更小的内存。</p>
+<p>目前所有 <strong>iOS</strong> 设备都采用 <strong>ARM</strong> 处理器，这意味着都是采用 <strong>ARM</strong> 指令集，如 <strong>armv6 / armv7 / armv7s / arm64</strong>，这些指令集都是向下兼容的。</p>
+<p>每种 <strong>CPU</strong> 架构都有着相应的指令集，可以针对不同的架构产生不同的汇编指令，加上上面 <strong>- arch arch_type</strong> 选项即可，更多请参见<a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/Assembler/000-Introduction/introduction.html">官网</a>。在 <strong>Xcode</strong> 中可在 <strong>Build Settings -&gt; Architectrues</strong> 指定产生的 <strong>CPU</strong> 指令集。</p>
+<h4 id="生成机器代码"><a href="#生成机器代码" class="headerlink" title="生成机器代码"></a>生成机器代码</h4><pre><code class="shell">xcrun clang -fmodules -c nihao.s -o nihao.o
+</code></pre>
+<p>可以发现机器码二进制文件无法阅读，可借助 <strong>otool</strong> 或者 <strong>MachOView</strong> 等工具查看文件中的相关内容：</p>
+<pre><code class="shell">otool -v -h nihao.o
+</code></pre>
+<pre><code>nihao.o:
+Mach header
+      magic  cputype cpusubtype  caps    filetype ncmds sizeofcmds      flags
+MH_MAGIC_64   X86_64        ALL  0x00      OBJECT     4        680 SUBSECTIONS_VIA_SYMBOLS
+</code></pre>
+<p>可以看见 <strong>.o</strong> 文件实际上是 <strong>mach-o</strong> 格式，这里我们输入可执行文件的头部，规定了这个文件是什么，适应架构的相关信息，以及文件是如何被加载的。更多关于 <strong>mach-o</strong> 的知识<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/54d842db3f69">参见</a>。</p>
+<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><pre><code class="shell">xcrun clang nihao.o -Wl,`xcrun --show-sdk-path`/System/Library/Frameworks/Foundation.framework/Foundation
+</code></pre>
+<pre><code class="shell">./a.out
+</code></pre>
+<pre><code>2021-11-03 16:06:41.734 a.out[6394:220026] nihao!!!
+</code></pre>
+<p>由于我们引入了 <strong>Foundation</strong> 里面的文件，所以需要将目标文件和 <strong>Foundation framework</strong>进行链接，接着就可以运行我们的程序了。</p>
+<p>这里涉及到一个概念：符号表，里面存储的元素如下：</p>
+<pre><code class="xml">&lt;起始地址&gt; &lt;结束地址&gt; &lt;函数&gt; [&lt;文件名:行号&gt;]
+</code></pre>
+<p>这里我们输入a.out的符号信息</p>
+<pre><code>nm -nm a.out
+</code></pre>
+<pre><code>                 (undefined) external _NSLog (from Foundation)
+                 (undefined) external ___CFConstantStringClassReference (from CoreFoundation)
+                 (undefined) external _objc_autoreleasePoolPop (from libobjc)
+                 (undefined) external _objc_autoreleasePoolPush (from libobjc)
+                 (undefined) external dyld_stub_binder (from libSystem)
+0000000100000000 (__TEXT,__text) [referenced dynamically] external __mh_execute_header
+0000000100003f20 (__TEXT,__text) external _main
+0000000100008018 (__DATA,__data) non-external __dyld_private
+</code></pre>
+<p>对于动态链接库的符号（如 <strong>Foundation</strong>），最终会记录下这个符号是通过进行链接的，并记录下依赖于哪个动态链接库。在运行时，动态链接器（<strong>dyld</strong>）会去解析这些 <strong>undefined</strong> 符号。对于其他位置的符号，会直接修正这些符号的具体位置信息。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文介绍了关于 iOS 编译器、iOS 编译过程的基础知识。学习了这些，对 iOS 编译有个整体认识。就本人而言，在一路搜寻资料的过程中，对之前一些零散的知识点有了一些更加深入的认识。由于篇幅有限，关于 SwiftC 的编译过程没有多做介绍，后面会再出一篇进行介绍。</p>
+<p>🔗：</p>
+<p><a target="_blank" rel="noopener" href="https://objccn.io/issue-6-3/">ObjC 中国 - Mach-O 可执行文件</a></p>
+<p><a target="_blank" rel="noopener" href="https://kiprey.github.io/2020/06/LLVM-IR-pass/">代码优化与LLVM IR pass</a></p>
+<p><a target="_blank" rel="noopener" href="http://xelz.info/blog/2018/11/24/all-you-need-to-know-about-bitcode/">关于bitcode, 知道这些就够了</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/340782811">iOS 编译链接：Objective-C 编译链接</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/54d842db3f69">趣探 Mach-O：文件格式分析</a></p>
+</article><section class="jump-container is-flex is-justify-content-space-between my-6"><!-- em is empty placeholder--><a class="button is-default" href="/2022/02/07/2022-02-07-Swift%20%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B/" title="Swift 编译流程"><i class="iconfont icon-prev mr-2 has-text-grey"></i><span class="has-text-weight-semibold">Previous: Swift 编译流程</span></a><a class="button is-default" href="/2021/09/29/2021-09-29-NSTimer%20%E5%BE%AA%E7%8E%AF%E5%BC%95%E7%94%A8%E5%88%86%E6%9E%90%E4%B8%8E%E8%A7%A3%E5%86%B3/" title="NSTimer循环引用分析与解决"><span class="has-text-weight-semibold">Next: NSTimer循环引用分析与解决</span><i class="iconfont icon-next ml-2 has-text-grey"></i></a></section><article class="mt-6 comment-container"><script async repo="xuhaodong1/xuhaodong1.github.io" src="https://utteranc.es/client.js" issue-term="pathname" theme="preferred-color-scheme"></script></article></div></div></main></main><footer class="is-flex is-flex-direction-column is-align-items-center is-flex-shrink-0 is-family-serif"><section class="sns-container"><!-- Github--><a title="github" target="_blank" rel="noopener nofollow" href="//github.com/xuhaodong1"><i class="iconfont icon-github"></i></a><!-- Ins--><!-- RSS--><!-- 知乎--><!-- 领英--><!-- 脸书--></section><p> <span>PV:</span><span id="busuanzi_value_site_pv"></span><span>  UV: </span><span id="busuanzi_value_site_uv"></span></p><p><span>Copyright ©</span><span> nihao 2023</span></p><div class="is-flex is-justify-content-center is-flex-wrap-wrap"><p>Powered by Hexo &verbar;&nbsp;</p><p class="is-flex is-justify-content-center"><a title="Hexo theme author" target="_blank" rel="noopener" href="//github.com/haojen">Theme by Haojen&nbsp;</a></p><div style="margin-top: 2px"><a class="github-button" title="github-button" target="_blank" rel="noopener" href="https://github.com/haojen/hexo-theme-Claudia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-show-count="true"></a></div></div><div><span></span></div></footer><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script async defer src="https://buttons.github.io/buttons.js"></script><script src="/js/post.js"></script></body></html>
