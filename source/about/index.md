@@ -8,4 +8,4 @@ layout: about
 
 如有兴趣，欢迎订阅我的微信公众号。
 
-<img src="../../source/about/index.assets/扫码_搜索联合传播样式-标准色版.png" alt="扫码_搜索联合传播样式-标准色版" style="zoom: 25%;" />
+<img src="/images/official.png" alt="扫码_搜索联合传播样式-标准色版" style="zoom: 25%;" />
