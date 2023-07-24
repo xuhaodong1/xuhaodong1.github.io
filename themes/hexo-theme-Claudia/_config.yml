@@ -55,8 +55,8 @@ appearance: auto # Default value is auto
 favicon: /images/avatar.jpeg
 
 # Google Analytics
-ga_track_id:
-ga_domain:
+ga_track_id: GmOiGEvbpJTlBAXAXlJZrGhRTZOlLBC_CZ2yJaZ_Ktk
+ga_domain: "https://www.nihao.cn/"
 
 # Baidu Analytics
 ba_track_id:
