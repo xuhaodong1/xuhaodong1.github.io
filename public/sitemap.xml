@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://xuhaodong1.github.io/2023/07/25/iOS%E4%B8%AD%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BD%9CAutoReleasePool/</loc>
+    
+    <lastmod>2023-07-25</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://xuhaodong1.github.io/about/index.html</loc>
     
     <lastmod>2023-07-22</lastmod>
@@ -22,7 +31,7 @@
   <url>
     <loc>https://xuhaodong1.github.io/2022/07/08/iOS%E4%B8%AD%E7%9A%84%E4%BA%8B%E4%BB%B6%E4%BB%A5%E5%8F%8A%E4%BA%8B%E4%BB%B6%E4%BC%A0%E9%80%92%E6%9C%BA%E5%88%B6/</loc>
     
-    <lastmod>2023-06-22</lastmod>
+    <lastmod>2023-07-20</lastmod>
     
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -139,7 +148,7 @@
 
   <url>
     <loc>https://xuhaodong1.github.io/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -147,112 +156,112 @@
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/NSTimer/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/iOS/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/Compile/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/Swift/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/App%E5%90%AF%E5%8A%A8/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/CocoaPods/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/LLDB/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/Instrument/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/GCD/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/%E9%94%81/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/NSThread/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/UI/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/%E5%B9%B4%E7%BB%88%E6%80%BB%E7%BB%93/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
@@ -261,14 +270,14 @@
   
   <url>
     <loc>https://xuhaodong1.github.io/categories/iOS/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
     <loc>https://xuhaodong1.github.io/categories/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2023-07-24</lastmod>
+    <lastmod>2023-07-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
