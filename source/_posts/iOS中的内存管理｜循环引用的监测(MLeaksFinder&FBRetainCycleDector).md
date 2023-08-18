@@ -23,26 +23,6 @@ MLeaksFinder 的核心逻辑比较简单：
 
 它利用 Method Swizzle HOOK 了许多 UIKit 相关类，如 `UIViewController`、`UIView`、`UINavigationController`、`UIPageViewController` 等，并拓展了 `NSObject`，为其添加 `willDealloc` 方法。在 `UIViewController` 或者 `UINavigationController` 在调用 `dismiss`、`pop` 时，就会调用 `vc`、`vc` 的子 `viewControllers`、`vc` 的 `view`、`view` 的 `subView` 的 `willDealloc` 方法。利用 `weak` 与 GCD，在两秒后查看对象是否存在。如果存在就会开启一个弹窗，根据宏定义选择输出利用 `FBRetainCycleDetector` 查找出来的循环引用链。
 
-但这样的内存方式存在两种方式的“误判”：
-
-* 单例或者被缓存起来的 `view` 或 `vc`
-* 释放不及时的 `view` 或者 `vc`
-
-对此，MLeaksFinder 也进行了一系列的措施进行补救：
-
-* 通过 assert 保证调用在主线程，按 `vc`、`vc` 的子 `viewcontrollers`、`vc` 的 `view` 这样的顺序调用它们的 `willDealloc`，并其向主线程追加是否存在对象（`willDealloc`）的任务。因为主线程是串行队列，因此 GCD 的回调总也是按顺序调用的。
-
-* 利用关联对象 `parentPtrs`，在上述顺序调用的过程中将 `vc` 或者 `view` 的所有未被释放的父级对象存储。
-* 同时引入了静态对象 `leakedObjectPtrs`，将最优先回调的对象（最上层的对象）加入到 `leakedObjectPtrs` 中，如果子对象和 `leakedObjectPtrs` 有相同的交集，就不会弹窗，直接退出，这也保证了在同一个层级树中只有一个弹窗的调用。如果对象被销毁（可能是释放不及时的 `vc` 或者 `view`）了，则将其地址从 `leakedObjectPtrs` 移除。
-
-单例或者被缓存起来的 `view` 或 `vc` 来说，由于 `leakedObjectPtrs` 留有一份地址，所以当重复进入、退出页面时，不会重复进行弹窗；
-
-对于释放不及时的 `view` 或者 `vc` 来说，在未被释放前，会产生弹窗，在释放之后，弹出的信息变为 `Object Deallocated`，也就是不仅会重复弹窗，而且还有新加弹窗。这是因为对于 `vc` 和 `view` 来说，它们的内存往往占用较大，因此应该立即被释放，如网络回调中 `block` 的强持有，这种情况就应把强引用改为弱引用；
-
-对于真正循环引用的对象，由于每次都会创建新的对象，因此会重复弹窗；
-
-不过 MLeaksFinder 的缺点也很明显，大部分只能用来对它做 `view`、`vc` 的循环引用监测，对于 C/C++ 的内存泄漏，以及自定义对象维护成本较高，算是一个轻量级的方案。
-
 ```objc
 - (BOOL)willDealloc {
     NSString *className = NSStringFromClass([self class]);
@@ -58,6 +38,72 @@ MLeaksFinder 的核心逻辑比较简单：
     return YES;
 }
 ```
+
+但这样的内存方式存在两种方式的“误判”：
+
+* 单例或者被缓存起来的 `view` 或 `vc`
+* 释放不及时的 `view` 或者 `vc`
+
+对此，MLeaksFinder 也进行了一系列的措施进行补救：
+
+* 通过 assert 保证调用在主线程，按 `vc`、`vc` 的子 `viewcontrollers`、`vc` 的 `view` 这样的顺序调用它们的 `willDealloc`，并其向主线程追加是否存在对象（`willDealloc`）的任务。因为主线程是串行队列，因此 GCD 的回调总也是按顺序调用的。
+
+```objc
+NSAssert([NSThread isMainThread], @"Must be in main thread.");
+```
+
+* 引入关联对象 `parentPtrs`，在上述顺序调用（至上而下）的过程中将 `vc` 或者 `view` 的所有未被释放的父级对象存储。
+
+```objc
+- (void)willReleaseObject:(id)object relationship:(NSString *)relationship {
+      ...
+    // 存储父级对象
+    [object setParentPtrs:[[self parentPtrs] setByAddingObject:@((uintptr_t)object)]];
+    ...
+}
+```
+
+* 引入了静态对象 `leakedObjectPtrs`，将最优先回调的对象（最上层的对象）加入到 `leakedObjectPtrs` 中，如果 `parentPtrs` 和 `leakedObjectPtrs` 有相同的交集，就不会弹窗，直接退出，这也保证了在同一个循环引用中只有一个弹窗的调用。如果对象被销毁（可能是释放不及时的 `vc` 或者 `view`）了，则将其地址从 `leakedObjectPtrs` 移除。
+
+```objc
++ (BOOL)isAnyObjectLeakedAtPtrs:(NSSet *)ptrs {
+    NSAssert([NSThread isMainThread], @"Must be in main thread.");
+    
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        leakedObjectPtrs = [[NSMutableSet alloc] init];
+    });
+    
+    if (!ptrs.count) {
+        return NO;
+    }
+    // 产生交集, 之前有弹窗, 直接退出
+    if ([leakedObjectPtrs intersectsSet:ptrs]) {
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+- (void)dealloc {
+    NSNumber *objectPtr = _objectPtr;
+    NSArray *viewStack = _viewStack;
+    // 对象如果被释放, 从 leakedObjectPtrs 将其移出
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [leakedObjectPtrs removeObject:objectPtr];
+        [MLeaksMessenger alertWithTitle:@"Object Deallocated"
+                                message:[NSString stringWithFormat:@"%@", viewStack]];
+    });
+}
+```
+
+单例或者被缓存起来的 `view` 或 `vc` 来说，由于 `leakedObjectPtrs` 留有一份地址，所以当重复进入、退出页面时，不会重复进行弹窗；
+
+对于释放不及时的 `view` 或者 `vc` 来说，在未被释放前，会产生弹窗，在释放之后，弹出的信息变为 `Object Deallocated`，也就是不仅会重复弹窗，而且还有新加弹窗。这是因为对于 `vc` 和 `view` 来说，它们的内存往往占用较大，因此应该立即被释放，如网络回调中 `block` 的强持有，这种情况就应把强引用改为弱引用；
+
+对于真正循环引用的对象，由于每次都会创建新的对象，因此会重复弹窗；
+
+不过 MLeaksFinder 的缺点也很明显，大部分只能用来对它做 `view`、`vc` 的循环引用监测，对于 C/C++ 的内存泄漏，以及自定义对象维护成本较高，算是一个轻量级的方案。
 
 ## FBRetainCycleDector
 
@@ -123,9 +169,11 @@ FBRetainCycleDetector 围绕着 `FBRetainCycleDetector` 类展开，通过初始
 
 传入的对象会被封装为 `FBObjectiveCGraphElement` 类型，同时它有三个子类 `FBObjectiveCBlock`、`FBObjectiveCObject` 与 `FBObjectiveCNSCFTimer`。这是因为需要弱引用待检测对象，同时不同对象的内存布局不同（如分为普通 `NSObject` 对象，`block` 对象，`timer` 对象），不仅如此封装还可以加入更多的对象细节以便开发者排查。
 
+`FBObjectiveCGraphElement` 封装了获取关联对象强引用的相关逻辑，`FBObjectiveCBlock` 封装了 `block` 对象强引用的相关逻辑，`FBObjectiveCObject` 封装了 `NSObject`  对象强引用的相关逻辑，`FBObjectiveCNSCFTimer` 封装了 `NSTimer` 对象强引用的相关逻辑。
+
 ### 算法分析
 
-查找循环引用的算法逻辑主要集中在 `_findRetainCyclesInObject` 方法中，访问树中每一条路径查看是否有循环引用，它以栈替代了递归方案，避免了多次递归导致的栈溢出，同时每次出栈时使用 `autoreleasepool` 避免了在这之中的产生的大量临时对象造成的内存激增。采用迭代器 `FBNodeEnumerator` 包装每一个节点，这样在迭代器内部保存未入栈的对象，避免一下将大量的子节点都入栈，提升查找效率。
+查找循环引用的算法逻辑主要集中在 `_findRetainCyclesInObject` 方法中，访问树中每一条路径查看是否有循环引用，它以栈替代了递归方案，避免了多次递归导致的栈溢出，同时每次出栈时使用 `autoreleasepool` 避免了在这之中的产生的大量临时对象造成的内存激增。采用迭代器 `FBNodeEnumerator` 包装每一个节点，这样在迭代器内部保存未入栈的对象，便于查找当前路径的循环引用链，同时也避免一下将大量的子节点都入栈，提升查找效率。
 
 重点介绍出栈时的相关逻辑：
 
@@ -213,23 +261,245 @@ FBRetainCycleDetector 围绕着 `FBRetainCycleDetector` 类展开，通过初始
 
 获取 `NSObject` 对象的强引用在 `FBObjectiveCObject` 类中实现，它利用 Runtime 的一些函数获得了 `ivars` 和 `ivarLayout`（区分了哪些是强引用和弱引用），它的几个核心方法逻辑如下（按调用顺序）：
 
-* `allRetainedObjects`：获取类的强引用布局信息，通过 `object_getIvar` 或偏移得到实际的对象，并将其封装为 `FBObjectiveCGraphElement` 类型，最后对是否是桥接对象，元类对象，可枚举对象进行处理。
+`allRetainedObjects`：获取类的强引用布局信息，通过 `object_getIvar` （OC对象）或偏移（结构体）得到实际的对象，并将其封装为 `FBObjectiveCGraphElement` 类型，最后对是否是桥接对象，元类对象，可枚举对象进行处理。
 
-* `FBGetObjectStrongReferences`：从子类到父类依次获取强引用，由 `FBObjectReference` 封装，并进行缓存。
-* `FBGetStrongReferencesForClass`：从类中获取它指向的所有引用，包括强引用和弱引用(`FBGetClassReferences`方法)；通过 `class_getIvarLayout` 获取关于 ivar 的描述信息，以若干组 `\xnm` 形式表示，n 表示 n 个非强属性，m 表示有 m 个强属性；通过 `FBGetMinimumIvarIndex` 获取变量索引的最小值；通过 `FBGetLayoutAsIndexesForDescription` 获取所有强引用的 Range（为两个索引）；最后使用 `NSPredicate` 过滤所有不在强引用 Range 中的属性。
-* `FBGetClassReferences`：调用 Runtime 的 `class_copyIvarList` 获取类的所有 `ivar`，并封装成 `FBIvarReference` 对象，其中包含了实例变量名称、类型（根据 `typeEncoding` 区分）、偏移、索引等信息；如果是结构体则遍历检查它是否包含其他的对象(`FBGetReferencesForObjectsInStructEncoding` 方法)。
+```objc
+- (NSSet *)allRetainedObjects
+{
+    ...
+  // 获取类的强引用布局信息
+  NSArray *strongIvars = FBGetObjectStrongReferences(self.object, self.configuration.layoutCache);
 
-具体分析可以参考 [检测 NSObject 对象持有的强指针](https://draveness.me/retain-cycle2/)
+  NSMutableArray *retainedObjects = [[[super allRetainedObjects] allObjects] mutableCopy];
+
+  for (id<FBObjectReference> ref in strongIvars) {
+    // ref 存储了 class 强引用的相关信息, 通过 object_getIvar（OC对象）或偏移（结构体）得到实际的对象
+    id referencedObject = [ref objectReferenceFromObject:self.object];
+
+    if (referencedObject) {
+      NSArray<NSString *> *namePath = [ref namePath];
+      FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self, referencedObject, self.configuration, namePath);
+      if (element) {
+        [retainedObjects addObject:element];
+      }
+    }
+  }
+
+  if ([NSStringFromClass(aCls) hasPrefix:@"__NSCF"]) {
+    return [NSSet setWithArray:retainedObjects];
+  }
+
+  if (class_isMetaClass(aCls)) {
+    return nil;
+  }
+
+  if ([aCls conformsToProtocol:@protocol(NSFastEnumeration)]) {
+      ... 
+  }
+}
+```
+
+`FBGetObjectStrongReferences`：从子类到父类依次获取强引用，由 `FBObjectReference` 封装，并进行缓存。
+
+```objc
+NSArray<id<FBObjectReference>> *FBGetObjectStrongReferences(id obj,
+                                                            NSMutableDictionary<Class, NSArray<id<FBObjectReference>> *> *layoutCache) {
+  NSMutableArray<id<FBObjectReference>> *array = [NSMutableArray new];
+
+  __unsafe_unretained Class previousClass = nil;
+  __unsafe_unretained Class currentClass = object_getClass(obj);
+  // 从子类到父类依次获取
+  while (previousClass != currentClass) {
+    NSArray<id<FBObjectReference>> *ivars;
+    // 如果之前缓存过
+    if (layoutCache && currentClass) {
+      ivars = layoutCache[currentClass];
+    }
+    
+    if (!ivars) {
+      // 获取类的强引用布局信息
+      ivars = FBGetStrongReferencesForClass(currentClass);
+      if (layoutCache && currentClass) {
+        layoutCache[(id<NSCopying>)currentClass] = ivars;
+      }
+    }
+    [array addObjectsFromArray:ivars];
+
+    previousClass = currentClass;
+    currentClass = class_getSuperclass(currentClass);
+  }
+
+  return [array copy];
+}
+```
+
+`FBGetStrongReferencesForClass`：
+
+从类中获取它指向的所有引用，包括强引用和弱引用(`FBGetClassReferences`方法)；
+
+通过 `class_getIvarLayout` 获取关于 `ivar` 的描述信息；通过 `FBGetMinimumIvarIndex` 获取 `ivar` 索引的最小值；通过 `FBGetLayoutAsIndexesForDescription` 获取所有强引用的 Range；
+
+最后使用 `NSPredicate` 过滤所有不在强引用 Range 中的 `ivar`。
+
+```objc
+static NSArray<id<FBObjectReference>> *FBGetStrongReferencesForClass(Class aCls) {
+  // 获取类的所有引用信息
+  NSArray<id<FBObjectReference>> *ivars = [FBGetClassReferences(aCls) filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
+    if ([evaluatedObject isKindOfClass:[FBIvarReference class]]) {
+      FBIvarReference *wrapper = evaluatedObject;
+      // 过滤 typeEncode 不为对象类型的数据
+      return wrapper.type != FBUnknownType;
+    }
+    return YES;
+  }]];
+  // 获取 ivar 的描述信息
+  const uint8_t *fullLayout = class_getIvarLayout(aCls);
+
+  if (!fullLayout) {
+    return @[];
+  }
+  // 获取 ivar 索引的最小值
+  NSUInteger minimumIndex = FBGetMinimumIvarIndex(aCls);
+  // 通过 fullLayout 和 minimumIndex 获取所有强引用的 Range
+  NSIndexSet *parsedLayout = FBGetLayoutAsIndexesForDescription(minimumIndex, fullLayout);
+  // 过滤掉弱引用 ivar
+  NSArray<id<FBObjectReference>> *filteredIvars =
+  [ivars filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id<FBObjectReference> evaluatedObject,
+                                                                           NSDictionary *bindings) {
+    return [parsedLayout containsIndex:[evaluatedObject indexInIvarLayout]];
+  }]];
+
+  return filteredIvars;
+}
+```
+
+`FBGetLayoutAsIndexesForDescription`：
+
+通过 `fullLayout` 和 `minimumIndex` 获取所有强引用的 Range。`fullLayout` 它以若干组 `\xnm` 形式表示，n 表示 n 个非强属性，m 表示有 m 个强属性； 
+
+`minimumIndex` 表示起始位，`upperNibble` 表示非强引用数量，因此需要加上 `upperNibble`，`NSMakeRange(currentIndex, lowerNibble)` 就是强引用的范围，最后再加上 `lowerNibble` 略过强引用索引与下一个数组开始对齐。
+
+```objc
+static NSIndexSet *FBGetLayoutAsIndexesForDescription(NSUInteger minimumIndex, const uint8_t *layoutDescription) {
+  NSMutableIndexSet *interestingIndexes = [NSMutableIndexSet new];
+  NSUInteger currentIndex = minimumIndex;
+
+  while (*layoutDescription != '\x00') {
+    int upperNibble = (*layoutDescription & 0xf0) >> 4;
+    int lowerNibble = *layoutDescription & 0xf;
+
+    currentIndex += upperNibble;
+    [interestingIndexes addIndexesInRange:NSMakeRange(currentIndex, lowerNibble)];
+    currentIndex += lowerNibble;
+
+    ++layoutDescription;
+  }
+
+  return interestingIndexes;
+}
+```
+
+`FBGetClassReferences`：
+
+调用 Runtime 的 `class_copyIvarList` 获取类的所有 `ivar`，并封装成 `FBIvarReference` 对象，其中包含了实例变量名称、类型（根据 `typeEncoding` 区分）、偏移、索引等信息；如果是结构体则遍历检查它是否包含其他的对象(`FBGetReferencesForObjectsInStructEncoding` 方法)。
+
+```objc
+NSArray<id<FBObjectReference>> *FBGetClassReferences(Class aCls) {
+  NSMutableArray<id<FBObjectReference>> *result = [NSMutableArray new];
+
+  unsigned int count;
+  Ivar *ivars = class_copyIvarList(aCls, &count);
+
+  for (unsigned int i = 0; i < count; ++i) {
+    Ivar ivar = ivars[i];
+    FBIvarReference *wrapper = [[FBIvarReference alloc] initWithIvar:ivar];
+    // 结构体类型，再遍历其中的结构
+    if (wrapper.type == FBStructType) {
+      std::string encoding = std::string(ivar_getTypeEncoding(wrapper.ivar));
+      NSArray<FBObjectInStructReference *> *references = FBGetReferencesForObjectsInStructEncoding(wrapper, encoding);
+
+      [result addObjectsFromArray:references];
+    } else {
+      [result addObject:wrapper];
+    }
+  }
+  free(ivars);
+
+  return [result copy];
+}
+```
 
 #### 获取 `block` 的强引用：
 
 获取 `block` 对象的强引用在 `FBObjectiveCBlock` 类中实现，它利用了 `dispose_helper` 函数会向强引用对象发送 `release` 消息实现，而对弱引用不会做任何处理，下面是一些主要函数与类：
 
-* `allRetainedObjects`：获取 block 的强引用数组（`FBGetBlockStrongReferences` 方法），并封装为 `FBObjectiveCGraphElement` 类型，这与 `FBObjectiveCObject` 的处理过程类似。
-* `FBGetBlockStrongReferences`：获取强引用的下标（`_GetBlockStrongLayout`  方法），将 block 转换为 `void **blockReference`，从而通过下标获取到强引用对象。
-* `FBBlockStrongRelationDetector`：在使用 `dispose_helper` 时使用的伪装成被引用的类，重写了 `release` 方法（只是做标记，不真正 `release`），同时含有一些必要属性兼容了引用对象是 block 的情况。
+`allRetainedObjects`：获取 block 的强引用数组（`FBGetBlockStrongReferences` 方法），并封装为 `FBObjectiveCGraphElement` 类型，这与 `FBObjectiveCObject` 的处理过程类似。
 
 ```objc
+- (NSSet *)allRetainedObjects
+{
+  NSMutableArray *results = [[[super allRetainedObjects] allObjects] mutableCopy];
+  
+  __attribute__((objc_precise_lifetime)) id anObject = self.object;
+
+  void *blockObjectReference = (__bridge void *)anObject;
+  NSArray *allRetainedReferences = FBGetBlockStrongReferences(blockObjectReference);
+
+  for (id object in allRetainedReferences) {
+    FBObjectiveCGraphElement *element = FBWrapObjectGraphElement(self, object, self.configuration);
+    if (element) {
+      [results addObject:element];
+    }
+  }
+
+  return [NSSet setWithArray:results];
+}
+```
+
+`FBGetBlockStrongReferences`：获取强引用的下标（`_GetBlockStrongLayout`  方法），将 block 转换为 `void **blockReference`，从而通过下标获取到强引用对象。
+
+```objc
+NSArray *FBGetBlockStrongReferences(void *block) {
+  if (!FBObjectIsBlock(block)) {
+    return nil;
+  }
+
+  NSMutableArray *results = [NSMutableArray new];
+
+  void **blockReference = block;
+  NSIndexSet *strongLayout = _GetBlockStrongLayout(block);
+  [strongLayout enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+    void **reference = &blockReference[idx];
+
+    if (reference && (*reference)) {
+      id object = (id)(*reference);
+
+      if (object) {
+        [results addObject:object];
+      }
+    }
+  }];
+
+  return [results autorelease];
+}
+```
+
+`FBBlockStrongRelationDetector`：在使用 `dispose_helper` 时使用的伪装成被引用的类，重写了 `release` 方法（只是做标记，不真正 `release`），同时含有一些必要属性兼容了引用对象是 block 的情况。
+
+```objc
+@implementation FBBlockStrongRelationDetector
++ (id)alloc
+{
+  FBBlockStrongRelationDetector *obj = [super alloc];
+
+  // 伪装成 block 
+  obj->forwarding = obj;
+  obj->byref_keep = byref_keep_nop;
+  obj->byref_dispose = byref_dispose_nop;
+
+  return obj;
+}
+
 - (oneway void)release
 {
   _strong = YES;
@@ -239,21 +509,142 @@ FBRetainCycleDetector 围绕着 `FBRetainCycleDetector` 类展开，通过初始
 {
   [super release];
 }
+
+@end
 ```
 
-* `_GetBlockStrongLayout`：如果有 C++ 的构造解析器，说明它持有的对象可能没有按照指针大小对齐，或者如果没有 `dispose` 函数，说明它不会持有对象，这两种情况直接返回 `nil`；将 `block` 转化为 `BlockLiteral` 类型，获得 `block` 所占内存大小，除以函数指针大小，并向上取整，得到可能有的引用对象个数（实际肯定小于这个数，因为含有 block 自身的一些属性，如 `isa`，`flag`，`size` 等）。不过由于其指针对齐与捕获变量排序机制（一般按`__strong`、``__block`、`__weak` 排序），我们以此创建的 `FBBlockStrongRelationDetector` 数组也与强引用的地址对齐，调用 `dispose_helper` 并将被标记的下标保留并返回。
+`_GetBlockStrongLayout`：
 
-具体分析可以参考 [iOS 中的 block 是如何持有对象的](https://draveness.me/block-retain-object/)
+如果有 C++ 的构造解析器，说明它持有的对象可能没有按照指针大小对齐，或者如果没有 `dispose` 函数，说明它不会持有对象，这两种情况直接返回 `nil`；
 
-* 获取 `NSTimer` 的强引用：
+将 `block` 转化为 `BlockLiteral` 类型，获得 `block` 所占内存大小，除以函数指针大小，并向上取整，得到可能有的引用对象个数（实际肯定小于这个数，因为含有 block 自身的一些属性，如 `isa`，`flag`，`size` 等）。
+
+不过由于其指针对齐与捕获变量排序机制（一般按`__strong`、``__block`、`__weak` 排序），我们以此创建的 `FBBlockStrongRelationDetector` 数组也与强引用的地址对齐，调用 `dispose_helper` 并将被标记的下标保留并返回。
+
+```objc
+static NSIndexSet *_GetBlockStrongLayout(void *block) {
+  struct BlockLiteral *blockLiteral = block;
+  
+  if ((blockLiteral->flags & BLOCK_HAS_CTOR)
+      || !(blockLiteral->flags & BLOCK_HAS_COPY_DISPOSE)) {
+    return nil;
+  }
+
+  void (*dispose_helper)(void *src) = blockLiteral->descriptor->dispose_helper;
+  const size_t ptrSize = sizeof(void *);
+
+  const size_t elements = (blockLiteral->descriptor->size + ptrSize - 1) / ptrSize;
+
+  void *obj[elements];
+  void *detectors[elements];
+
+  for (size_t i = 0; i < elements; ++i) {
+    FBBlockStrongRelationDetector *detector = [FBBlockStrongRelationDetector new];
+    obj[i] = detectors[i] = detector;
+  }
+
+  @autoreleasepool {
+    dispose_helper(obj);
+  }
+
+  NSMutableIndexSet *layout = [NSMutableIndexSet indexSet];
+
+  for (size_t i = 0; i < elements; ++i) {
+    FBBlockStrongRelationDetector *detector = (FBBlockStrongRelationDetector *)(detectors[i]);
+    if (detector.isStrong) {
+      [layout addIndex:i];
+    }
+    [detector trueRelease];
+  }
+
+  return layout;
+}
+```
+
+#### 获取 `NSTimer` 的强引用：
 
 获取 `NSTimer` 的强引用在 `FBObjectiveCNSCFTimer` 中实现，它将 `NSTimer` 转换为 `CFTimer`，如果它有 `retain` 函数，就假设它含有强引用对象，将 `target` 和 `userInfo` 分别将其以 `FBObjectiveCGraphElement` 包装并返回。
 
-* 获取强引用关联对象：
+```objc
+- (NSSet *)allRetainedObjects
+{
+  __attribute__((objc_precise_lifetime)) NSTimer *timer = self.object;
+
+  if (!timer) {
+    return nil;
+  }
+
+  NSMutableSet *retained = [[super allRetainedObjects] mutableCopy];
+
+  CFRunLoopTimerContext context;
+  CFRunLoopTimerGetContext((CFRunLoopTimerRef)timer, &context);
+
+  if (context.info && context.retain) {
+    _FBNSCFTimerInfoStruct infoStruct = *(_FBNSCFTimerInfoStruct *)(context.info);
+    if (infoStruct.target) {
+      FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self, infoStruct.target, self.configuration, @[@"target"]);
+      if (element) {
+        [retained addObject:element];
+      }
+    }
+    if (infoStruct.userInfo) {
+      FBObjectiveCGraphElement *element = FBWrapObjectGraphElementWithContext(self, infoStruct.userInfo, self.configuration, @[@"userInfo"]);
+      if (element) {
+        [retained addObject:element];
+      }
+    }
+  }
+
+  return retained;
+}
+```
+
+#### 获取强引用关联对象：
 
 在 `FBAssociationManager` 中提供了 `hook` 关联对象的 `objc_setAssociatedObject` 和 `objc_removeAssociatedObjects`，它将设置成 `retain` 策略的关联对象的 key 拷贝存储，最后通过拷贝的强引用的 key 通过 `objc_getAssociatedObject` 取出强引用（`associationsForObject`）。
 
-* 可迭代对象如何处理
+```c++
+  NSArray *associations(id object) {
+    std::lock_guard<std::mutex> l(*_associationMutex);
+    if (_associationMap->size() == 0 ){
+      return nil;
+    }
+
+    auto i = _associationMap->find(object);
+    if (i == _associationMap->end()) {
+      return nil;
+    }
+
+    auto *refs = i->second;
+
+    NSMutableArray *array = [NSMutableArray array];
+    for (auto &key: *refs) {
+      // 找到备份的 key，从关联对象中取出强引用
+      id value = objc_getAssociatedObject(object, key);
+      if (value) {
+        [array addObject:value];
+      }
+    }
+    return array;
+  }
+
+  static void fb_objc_setAssociatedObject(id object, void *key, id value, objc_AssociationPolicy policy) {
+    {
+      std::lock_guard<std::mutex> l(*_associationMutex);
+      // 拷贝一份 key
+      if (policy == OBJC_ASSOCIATION_RETAIN ||
+          policy == OBJC_ASSOCIATION_RETAIN_NONATOMIC) {
+        _threadUnsafeSetStrongAssociation(object, key, value);
+      } else {
+        // 可能是策略改变
+        _threadUnsafeResetAssociationAtKey(object, key);
+      }
+    }
+    fb_orig_objc_setAssociatedObject(object, key, value, policy);
+  }
+```
+
+#### 可迭代对象如何处理
 
 如果对象支持 `NSFastEnumeration` 协议，会遍历对象，将容器里的内容取出，以 `FBObjectiveCGraphElement` 封装。不过遍历过程中元素可能会改变，因此会如果取出失败会进行最大次数为 10 的重试机制。
 
